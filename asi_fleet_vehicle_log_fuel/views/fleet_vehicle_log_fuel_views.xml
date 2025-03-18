@@ -1,0 +1,46 @@
+<odoo>
+<record id='fleet_vehicle_log_fuel_view_form' model='ir.ui.view'>
+    <field name="name">fleet.vehicle.log.fuel.form</field>
+    <field name="model">fleet.vehicle.log.fuel</field>
+    <field name="inherit_id" ref="fleet_vehicle_log_fuel.fleet_vehicle_log_fuel_view_form" />
+    
+    <field name="arch" type="xml">
+      <xpath expr="//field[@name='vehicle_id']" position="replace"/>      
+      <xpath expr="//field[@name='description']" position="replace"> 
+             <field name="vehicle_id" />              
+      </xpath>
+      <xpath expr="//field[@name='date']" position="after">
+            <field name="liter_in_tank" />   
+            <field name="last_service_km" />
+             <field name="fuel_consumption" />
+            <field name="consumption_index" />                                 
+      </xpath>
+      <xpath expr="//field[@name='amount']" position="replace"/>  
+      <xpath expr="//field[@name='vendor_id']" position="replace"/>        
+    </field>
+    
+    
+  </record>
+    <record id='fleet_vehicle_view_form' model='ir.ui.view'>
+        <field name="name">fleet.vehicle.form</field>
+        <field name="model">fleet.vehicle</field>
+        <field name="inherit_id" ref="fleet.fleet_vehicle_view_form" />
+        <field name="arch" type="xml">
+            <xpath expr="//field[@name='next_assignation_date']" position="after">
+                <field name="manufacturer_consumption_index" />
+            </xpath>
+        </field>
+    </record>
+<record id="fleet_vehicle_log_fuel_tree_view" model="ir.ui.view">
+    <field name="name">fleet.vehicle.log.fuel.tree</field>
+    <field name="model">fleet.vehicle.log.fuel</field>
+    <field name="inherit_id" ref="fleet_vehicle_log_fuel.fleet_vehicle_log_fuel_view_tree" />
+    <field name="arch" type="xml">
+      <xpath expr="//tree" position="inside">
+        <field name="fuel_consumption" sum="Total Litros Consumidos" />
+        <field name="last_service_km" sum="Total km" />                
+        <field name="consumption_index" />
+      </xpath>
+    </field>
+  </record>
+</odoo>

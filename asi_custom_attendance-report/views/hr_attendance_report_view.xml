@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<odoo>
+    <record id="view_hr_attendance_report_tree" model="ir.ui.view">
+        <field name="name">hr.attendance.report.tree</field>
+        <field name="model">hr.attendance.report</field>
+        <field name="arch" type="xml">
+            <tree>
+                <field name="date"/>
+                <field name="employee_id"/>
+                <field name="checkin_morning"/>
+                <field name="checkout_morning"/>
+                <field name="checkin_afternoon"/>
+                <field name="checkout_afternoon"/>
+            </tree>
+        </field>
+    </record>
+</odoo>

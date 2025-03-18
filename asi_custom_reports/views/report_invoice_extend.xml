@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<odoo>
+    <template id="report_invoice_document_extend" inherit_id="account.report_invoice_document">
+        <xpath expr="//div[@t-field='o.partner_id']" position="inside">
+            <t t-if="o.partner_id.ref">
+                <div>
+                    <span t-field="o.partner_id.ref"/>
+                </div>
+            </t>
+        </xpath>
+    </template>
+</odoo>

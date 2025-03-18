@@ -1,0 +1,1 @@
+from . import asi_fleet_vehicle_log_fuel

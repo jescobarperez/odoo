@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- Heredar y modificar el layout estándar -->
+    <template id="custom_external_layout_standard" inherit_id="web.external_layout_standard">
+        <xpath expr="//div[hasclass('pt-5')]" position="replace"/>
+            
+        
+       
+    </template>
+
+</odoo>
