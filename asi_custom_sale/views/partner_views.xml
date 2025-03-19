@@ -16,20 +16,25 @@
             <field name="name">res.partner.custom_form_view</field>
             <field name="model">res.partner</field>
             <field name="inherit_id" ref="base.view_partner_form"/>
-            <field name="arch" type="xml">
-                <xpath expr="//field[@name='ref']" position="after">
-                    <field name="reeup_code"/>
-                    <field name="nit"/>
-                    <field name="commercial_registration_number"/>
-                    <field name="subordination"/>
-                    <field name="accreditation_data"/>                   
-                <field name="function" position="after">
-                    <field name="can_sign_invoices" attrs="{'invisible': [('company_type', '=', 'company')]}"/>
+                <field name="arch" type="xml">
+                    <!-- Agregar campos después de 'ref' -->
+                    <xpath expr="//field[@name='ref']" position="after">
+                        <field name="reeup_code"/>
+                        <field name="commercial_registration_number"/>
+                        <field name="subordination"/>
+                        <field name="accreditation_data"/>
+                    </xpath>
+            
+                    <!-- Agregar campo después de 'function' -->
+                    <xpath expr="//field[@name='function']" position="after">
+                        <field name="can_sign_invoices" attrs="{'invisible': [('company_type', '=', 'company')]}"/>
+                    </xpath>
+            
+                    <!-- Agregar campo en dirección de contacto -->
+                    <xpath expr="//page[@name='contact_addresses']/field[@name='child_ids']/form//field[@name='function']" position="after">
+                        <field name="can_sign_invoices" attrs="{'invisible': [('type', '!=', 'contact')]}"/>
+                    </xpath>
                 </field>
-                <xpath expr="//page[@name='contact_addresses']/field[@name='child_ids']/form//field[@name='function']" position="after">
-                    <field name="can_sign_invoices" attrs="{'invisible': [('type', '!=', 'contact')]}"/>
-                </xpath>
-            </field>
         </record>
     </data>
 </odoo>

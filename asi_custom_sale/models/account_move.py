@@ -14,6 +14,11 @@ class AccountMove(models.Model):
         help="Persona autorizada para firmar facturas por parte del cliente."
     )
     amount_in_words = fields.Char(string='Importe en Letras', compute='_compute_amount_in_words', store=True )               
+    sale_order_names = fields.Char(
+        string="Órdenes de Venta",
+        compute="_compute_sale_orders",
+        store=True
+    )
 
     # Método para marcar la factura como revisada
                  
@@ -39,6 +44,17 @@ class AccountMove(models.Model):
             amount_in_words = currency.amount_to_text(amount) 
             move.amount_in_words = amount_in_words.capitalize()
 
+    @api.depends("invoice_line_ids.sale_line_ids.order_id")
+    def _compute_sale_orders(self):
+        """Obtiene las órdenes de venta vinculadas a la factura y las une en una cadena separada por comas."""
+        for move in self:
+            sale_orders = move.invoice_line_ids.mapped("sale_line_ids.order_id.name")
+            move.sale_order_names = ", ".join(sale_orders) if sale_orders else ""
+ 
+    def action_recompute_sale_orders(self):
+        """Recalcula el campo sale_order_names para todas las facturas existentes."""
+        all_moves = self.search([])
+        all_moves._compute_sale_orders()
         
     def action_post(self):
         for invoice in self:

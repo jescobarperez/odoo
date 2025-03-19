@@ -4,7 +4,6 @@ class ResPartner(models.Model):
     _inherit = 'res.partner'
 
     reeup_code = fields.Char(string='Código REEUP')
-    nit = fields.Char(string='NIT')
     commercial_registration_number = fields.Char(string='Número de Registro Comercial')
     subordination = fields.Char(string='Subordinación')
     accreditation_data = fields.Text(string='Datos de Acreditación')

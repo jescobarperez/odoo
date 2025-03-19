@@ -12,17 +12,13 @@
     'depends': ['base','web','sale', 'account'],
     'data': [
         'views/invoice_views.xml',
-          
+        'views/partner_views.xml',  
         'views/sale_order_views.xml',
         'reports/report_templates.xml',
         'reports/report_invoice_extend.xml',
         'reports/sale_report.xml',
     ],
-    'assets': {
-        'web.assets_backend': [
-            'asi_custom_sale/static/src/css/styles.css',
-        ],
-    },
+   
     'installable': True,
     'application': True,
 }

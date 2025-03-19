@@ -7,7 +7,6 @@
             <field name="arch" type="xml">
                 <xpath expr="//field[@name='ref']" position="after">
                     <field name="reeup_code"/>
-                    <field name="nit"/>
                     <field name="commercial_registration_number"/>
                     <field name="subordination"/>
                     <field name="accreditation_data"/>

@@ -5,10 +5,7 @@
         <xpath expr="//div[hasclass('o_address_format')]" position="inside">
             <div t-if="partner.reeup_code" class="o_address_format">
                 <strong>REEUP:</strong> <span t-esc="partner.reeup_code"/>
-            </div>
-            <div t-if="partner.nit" class="o_address_format">
-                <strong>NIT:</strong> <span t-esc="partner.nit"/>
-            </div>
+            </div>           
         </xpath>
     </template>
 </odoo>

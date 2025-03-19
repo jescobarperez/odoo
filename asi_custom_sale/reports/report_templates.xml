@@ -1,12 +1,64 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
-
-    <!-- Heredar y modificar el layout estándar -->
-    <template id="custom_external_layout_standard" inherit_id="web.external_layout_standard">
-        <xpath expr="//div[hasclass('pt-5')]" position="replace"/>
+     <record id="paperformat_report_ASISURL" model="report.paperformat">
+        <field name="name">Sale Order Report ASISURL</field>
+        <field name="default" eval="True"/>
+        <field name="format">custom</field>
+        <field name="page_height">0</field>
+        <field name="page_width">0</field>
+        <field name="orientation">Portrait</field>
+        <field name="margin_top">40</field>
+        <field name="margin_bottom">45</field>
+        <field name="margin_left">7</field>
+        <field name="margin_right">7</field>
+        <field name="header_line" eval="False"/>
+        <field name="header_spacing">20</field>
+        <field name="dpi">90</field>
+    </record>
+    
+    <record id="account.account_invoices" model="ir.actions.report">
+        <field name="paperformat_id" ref="paperformat_report_ASISURL"/>
+    </record>
+    
+    <record id="sale.action_report_saleorder" model="ir.actions.report">
+        <field name="paperformat_id" ref="paperformat_report_ASISURL"/>
+    </record>
+    
+    
+                        
+    <!-- Heredar CSS principal -->
+    <template id="custom_report_styles" inherit_id="web.report_layout">
+        <xpath expr="//head" position="inside">
+            <style>
+                /* Eliminar espacios en direcciones 
+                .address.row { 
+                    margin-top: 0 !important;
+                    padding-top: 0 !important;
+                    display: none !important;
+                }
+                */
+                /* Ajustar encabezado */
+                .o_company_1_layout.header {
+                    margin-bottom: 0 !important;
+                }
+            </style>
             
-        
-       
+     
+        </xpath>
+    </template>
+
+    <!-- Heredar layout estandar -->
+    <template id="custom_external_layout_standard" inherit_id="web.external_layout_standard">
+        <xpath expr="//div[@class='pt-5']" position="replace"/>       
+
+        </template>
+
+
+    <!-- Heredar plantilla de factura -->
+    <template id="custom_invoice_report" inherit_id="web.report_invoice_wizard_preview">
+        <xpath expr="//div[@class='page mt-5']" position="attributes">
+            <attribute name="class">page mt-2</attribute>
+        </xpath>
     </template>
 
 </odoo>

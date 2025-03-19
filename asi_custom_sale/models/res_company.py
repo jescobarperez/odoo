@@ -5,7 +5,6 @@ class ResCompany(models.Model):
     
     reeup_code = fields.Char(compute='_compute_address', inverse='_inverse_reeup_code')
     ref = fields.Char(compute='_compute_address', inverse='_inverse_ref')
-    nit = fields.Char(compute='_compute_address', inverse='_inverse_nit')
     bank_accounts = fields.Text(compute='_compute_address', inverse='_inverse_bank_accounts')
    
     def _inverse_reeup_code(self):
@@ -16,10 +15,7 @@ class ResCompany(models.Model):
         for company in self:
             company.partner_id.ref = company.ref        
             
-    def _inverse_nit(self):
-        for company in self:
-            company.partner_id.nit = company.nit     
-             
+            
     def _inverse_bank_accounts(self):
         for company in self:
             company.partner_id.bank_accounts = company.bank_accounts               
@@ -31,7 +27,6 @@ class ResCompany(models.Model):
         address_fields = super(ResCompany, self)._get_company_address_field_names()
         # Añadimos el campo 'ref' a la lista
         address_fields.append('reeup_code')
-        address_fields.append('nit')
         address_fields.append('bank_accounts')
         return address_fields    
 

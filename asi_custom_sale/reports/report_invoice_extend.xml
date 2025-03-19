@@ -40,39 +40,94 @@
             <!-- elimino el parrafo de las direcciones -->
             <t/>    
         </xpath>
-        <xpath expr="//div[@id='informations']" position="before">      
-            <div class="row mt-4 mb-4 mw-100">
-                <!-- Columna izquierda: Datos básicos -->
-                <div class="col-6">
-                    <!-- Aplica el mismo estilo que "Fecha de factura" -->
-                    <strong>Información del Cliente:</strong>
-                    <div><strong>Nombre:</strong> <span t-esc="o.partner_id.name"/></div>
-                    <div><strong>Dirección:</strong> <span t-esc="o.partner_id.contact_address"/></div>
-                    <div t-if="o.partner_id.vat"><strong>NIT:</strong> <span t-esc="o.partner_id.vat"/></div>
+        
+        <xpath expr="//div[@name='customer_code']" position="replace"/>
+        
+        <xpath expr="//div[@id='informations']" position="before">
+            <div class="row mt-1 mb-0 mw-100">  
+                <div class="col-6" name="informations_company">
+                    <!-- Estilo para Datos de la Sociedad -->
+                    <div class="d-flex align-items-center mb-2">
+                        <strong class="col-6">Datos de la Sociedad:</strong>
+                    </div>
+                    <div class="d-flex align-items-baseline">
+                        <strong class="col-4">Nombre:</strong>
+                        <span class="col-8" t-esc="o.company_id.partner_id.name"/>
+                    </div>
+                    <div class="d-flex align-items-baseline">
+                        <strong class="col-4">Dirección:</strong>
+                        <span class="col-8" t-esc="o.company_id.partner_id.street"/>
+                    </div>
+                    <t t-if="o.company_id.partner_id.vat">
+                        <div class="d-flex align-items-baseline">
+                            <strong class="col-4">NIT:</strong>
+                            <span class="col-8" t-esc="o.company_id.partner_id.vat"/>
+                        </div>
+                    </t>
+                    <t t-if="o.company_id.partner_id.commercial_registration_number">
+                        <div class="d-flex align-items-baseline">
+                            <strong class="col-4">IRCC:</strong>
+                            <span class="col-8" t-esc="o.company_id.partner_id.commercial_registration_number"/>
+                        </div>
+                    </t>
+                    <t t-if="o.company_id.partner_id.bank_accounts">
+                        <div class="d-flex align-items-baseline">
+                            <strong class="col-4">Cuenta bancaria:</strong>
+                            <span class="col-8" t-esc="o.company_id.partner_id.bank_accounts.split('; ')[0] or 'No especificado'"/>
+                        </div>
+                    </t>
                 </div>
-
-                <!-- Columna derecha: Código y cuentas bancarias -->
+        
                 <div class="col-6">
-                    <!-- Aplica el mismo estilo que "Fecha de factura" -->
-                    <p></p>
-                    <div t-if="o.partner_id.ref">
-                        <strong>Código:</strong> <span t-esc="o.partner_id.ref"/>
+                    <!-- Estilo para Datos del Cliente -->
+                    <div class="d-flex align-items-center mb-2">
+                        <strong class="col-4">Datos del Cliente:</strong>
                     </div>
-                    <div t-if="o.partner_id.bank_ids">
-                        <strong>Cuenta Bancaria:</strong>
-                        <ul class="list-unstyled">
-                            <t t-foreach="o.partner_id.bank_ids" t-as="bank">
-                                <li>
-                                    <span t-esc="bank.bank_id.name"/>: 
-                                    <span t-esc="bank.acc_number"/>
-                                </li>
-                            </t>
-                        </ul>
+                    <div class="d-flex align-items-baseline">
+                        <strong class="col-4">Nombre:</strong>
+                        <span class="col-8" t-esc="o.partner_id.name"/>
                     </div>
+                    <div class="d-flex align-items-baseline">
+                        <strong class="col-4">Dirección:</strong>
+                        <span class="col-8">
+                            <span t-esc="o.partner_id.street"/>
+                            <t t-if="o.partner_id.state_id">, <span t-esc="o.partner_id.state_id.name"/></t>
+                        </span>
+                    </div>
+                    <t t-if="o.partner_id.vat">
+                        <div class="d-flex align-items-baseline">
+                            <strong class="col-4">NIT:</strong>
+                            <span class="col-8" t-esc="o.partner_id.vat"/>
+                        </div>
+                    </t>
+                    <t t-if="o.partner_id.ref">
+                        <div class="d-flex align-items-baseline">
+                            <strong class="col-4">Código:</strong>
+                            <span class="col-8" t-esc="o.partner_id.ref"/>
+                        </div>
+                    </t>
+                    <t t-if="o.partner_id.bank_accounts">
+                        <div class="d-flex align-items-baseline">
+                            <strong class="col-4">Cuenta Bancaria:</strong>
+                            <span class="col-8" t-esc="o.partner_id.bank_accounts"/>
+                        </div>
+                    </t>
+                    <t t-if="o.partner_id.asi_contract">
+                        <div class="d-flex align-items-baseline">
+                            <strong class="col-4">Contrato:</strong>
+                            <span class="col-8" t-esc="o.partner_id.asi_contract"/>
+                        </div>
+                    </t>
                 </div>
             </div>
+            <p></p>
         </xpath>
-        
+        <xpath expr="//div[@id='informations']" position="inside">
+            <div t-if="o.sale_order_names">
+                <strong>Ref:</strong> <t t-esc="o.sale_order_names"/>
+            </div>
+        </xpath>
+
         <xpath expr="//div[hasclass('page')]" position="inside">
             <style>
                 .page {
@@ -87,8 +142,7 @@
         <xpath expr="//p[@name='payment_communication']" position="replace">
             <p>
                 <strong>Forma de Pago:</strong> <t t-esc="'Cheque o Transferencia'"/>.
-                <strong> Plazo:</strong> <t t-esc="o.invoice_payment_term_id.name or 'No especificado'"/>.
-                <strong> Páguese a cuenta bancaria:</strong> <t t-esc="o.company_id.partner_id.bank_ids[:1].acc_number or 'No especificado'"/>.                
+                <strong> Plazo:</strong> <t t-esc="o.invoice_payment_term_id.name or 'No especificado'"/>.        
                 <strong> Importe en letras:</strong> <t t-esc="o.amount_in_words or 'No especificado'"/>.              
             </p>
         <!-- Agregar la tabla de firma antes del footer -->
@@ -99,16 +153,16 @@
     <div class="row mt-4 signature-section" style="page-break-inside: avoid;">
         
         <!-- Entregado por -->
-        <div class="col-3">
+        <div class="col-3 mb-4">
             <table class="table table-sm table-borderless">
                 <tbody>
                     <tr>
                         <td>
                             <strong>ENTREGADO POR:</strong>
                             <div class="signature-line">
-                                <div>Nombre: <t t-esc="o.invoice_user_id.employee_id.parent_id.name or ''"/></div>
-                                <div>Firma:</div>
-                                <div>Fecha:</div>
+                                <div>Nombre: </div><p/>
+                                <div>Firma:</div><p/>
+                                <div>Fecha:</div><p/>
                             </div>
                         </td>
                     </tr>
@@ -117,16 +171,16 @@
         </div>
 
         <!-- Recibido por -->
-        <div class="col-3">
+        <div class="col-3 mb-4">
             <table class="table table-sm table-borderless">
                 <tbody>
                     <tr>
                         <td>
                             <strong>RECIBIDO POR:</strong>
                             <div class="signature-line">
-                                <div>Nombre:</div>
-                                <div>Firma:</div>
-                                <div>Fecha:</div>
+                                <div>Nombre:</div><p/>
+                                <div>Firma:</div><p/>
+                                <div>Fecha:</div><p/>
                             </div>
                         </td>
                     </tr>
@@ -134,35 +188,35 @@
             </table>
         </div>
 
-        <!-- Transportado por 
-        <div class="col-3">
+        <!--  Transportado por  -->
+        <div class="col-3 mb-4">
             <table class="table table-sm table-borderless">
                 <tbody>
                     <tr>
                         <td>
                             <strong>TRANSPORTADO POR:</strong>
                             <div class="signature-line">
-                                <div>Nombre:</div>
-                                <div>Firma:</div>
-                                <div>Fecha:</div>
+                                <div>Nombre:</div><p/>
+                                <div>Firma:</div><p/>
+                                <div>Fecha:</div><p/>
                             </div>
                         </td>
                     </tr>
                 </tbody>
             </table>
-        </div>-->
+        </div>
 
         <!-- Contabilizado por -->
-        <div class="col-3">
+        <div class="col-3 mb-4">
             <table class="table table-sm table-borderless">
                 <tbody>
                     <tr>
                         <td>
                             <strong>CONTABILIZADO POR:</strong>
                             <div class="signature-line">
-                                <div>Nombre:</div>
-                                <div>Firma:</div>
-                                <div>Fecha:</div>
+                                <div>Nombre:</div><p/>
+                                <div>Firma:</div><p/>
+                                <div>Fecha:</div><p/>
                             </div>
                         </td>
                     </tr>

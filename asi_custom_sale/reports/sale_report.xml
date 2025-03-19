@@ -1,80 +1,42 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
     <data>
-
-    <template id="report_saleorder_document" inherit_id="sale.report_saleorder_document">
-           <xpath expr="//div[hasclass('page')]" position="inside">
-                <style>
-                    .page {
-                        font-size: 12pt;
-                    }
-                </style>
-            </xpath>
-           
-            <xpath expr="//div[@id='informations']" position="before">      
-                    <div class="row mt-4 mb-4 mw-100">
-                        <div class="col-6">
-                            <strong>Información del Cliente:</strong>
-                            <div><strong>Nombre:</strong> <span t-esc="doc.partner_id.name"/></div>
-                            <div><strong>Dirección:</strong> <span t-esc="doc.partner_id.contact_address"/></div>
-                            <div t-if="doc.partner_id.vat"><strong>NIT:</strong> <span t-esc="doc.partner_id.vat"/></div>
-                        </div>
-        
-                        <!-- Columna derecha: Código y cuentas bancarias -->
-                        <div class="col-6">
-                            <!-- Aplica el mismo estilo que "Fecha de factura" -->
-                            <p></p>
-                            <div t-if="doc.partner_id.ref">
-                                <strong>Código:</strong> <span t-esc="doc.partner_id.ref"/>
-                            </div>
-                            <div t-if="doc.partner_id.bank_ids">
-                                <strong>Cuenta Bancaria:</strong>
-                                <t t-esc="doc.partner_id.bank_accounts"/>
-                                
-                            </div>
-                        </div>
-                    </div>
-                </xpath>
-     
-        
-            <xpath expr="//h2[@class='mt-4']" position="attributes">
-                <attribute name="class">mt-0</attribute>
-            </xpath>
-            <xpath expr="//div[@name='so_total_summary']" position="after">
-                <div t-if="doc.payment_term_id">
-                    <p><strong>Plazo de pago: </strong> <t t-esc="doc.payment_term_id.name or 'No especificado'"/></p>
-                    <p><strong>Páguese a cuenta bancaria: </strong><t t-esc="doc.company_id.partner_id.bank_accounts"/></p>
-                </div>
-            </xpath>    
-            <xpath expr="//div[@name='signature']" position="after">                
-                    <div class="row pt-5" style="page-break-inside: avoid;">         
+    
+      <!-- Plantilla común para el pie de firma -->
+    <template id="signature_footer_common">
+      <div class="signature-footer">
+         <div class="row pt-5" >         
                       <div class="col-5">
-                        <div class="clearfix mb-4">
+                        <div class="clearfix mb-0">
                             <div>
                                 <div class="col-lg-12">
                                     <table class="table table-sm table-borderless" style="page-break-inside: avoid;">
                                         <tbody>
-                                            <tr class="border-black">
+                                            <tr >
                                                 <td>
                                                     <strong>
-                                                      <t t-if="not invoice_header_and_footer">
-                                                          Por la Sociedad:
-                                                      </t>
-                                                      <t t-else="">
-                                                          Comercial                                     
-                                                      </t>
+                                                       <t t-if="doc.state == 'sale'">
+                                                               <span>Por la SOCIEDAD:</span>
+                                                        </t>
+                                                          <t t-elif="doc.state == 'draft'">
+                                                              <span>Comercial:</span>
+                                                          </t>
                                                       </strong>                                              
                                                 </td>
                                             </tr>
                                             <tr>
                                                 <td>
                                                    <span class="text-nowrap">
-                                                     <t t-if="not invoice_header_and_footer">
-                                                     ___________________________________
-                                                     </t>
-                                                      <t t-else="">
-                                                          <span t-field="o.invoice_user_id.name" />                                     
-                                                      </t>
+                                                        <t t-if="doc.state == 'sale'">
+                                                                <span t-esc="doc.team_id.user_id.name or 'N/A'"/>  <!-- Jefe del equipo de ventas -->
+                                                        </t>
+                                                          <t t-elif="doc.state == 'draft'">
+                                                              <span t-esc="doc.user_id.name or 'N/A'"/>  <!-- Comercial asignado -->
+                                                          </t>
+                                                        <t t-else="">
+                                                          <span>________________________</span>
+                                                        </t>
+                                                        
                                                      </span>
                                                  </td>
                                             </tr>
@@ -101,7 +63,7 @@
                                 <div class="col-lg-12">
                                     <table class="table table-sm table-borderless" style="page-break-inside: avoid;">
                                         <tbody>
-                                            <tr class="border-black">
+                                            <tr>
                                                 <td>
                                                     <strong>Por el Cliente:</strong>
                                                 </td>
@@ -127,66 +89,200 @@
                             </div>
                         </div>
                     </div>
-                </div>        
+                </div>
+      </div>
+      <style>
+       .signature-footer {        
+          padding-top: 10px;
+          margin-top: 10px;
+          width: 100%; /* Asegura que el pie de firma ocupe todo el ancho */
+          text-align: center; /* Centra el contenido dentro del div */
+          page-break-inside: avoid; /* Evita que el pie de firma se divida entre páginas en el PDF */
+        }
+        
+        .signature-line {
+          border-bottom: 1px solid #000;
+          width: 250px; /* Línea más larga para mejor visibilidad */
+          margin: 10px auto;
+        }
+         
+        .signature-footer p {
+          margin: 5px 0; /* Reduce el espacio entre líneas para que no se corte */
+          font-size: 11px; /* Reduce el tamaño de la letra si es necesario */
+        }
                 
-                
-            </xpath>
+      </style>
+      
+    </template>
+    
+    <!-- Heredar el layout estándar para modificar el footer -->
+    <template id="external_layout_standard_inherit" inherit_id="web.external_layout_standard">
+      <!-- Usar el atributo t-attf-class para ubicar el footer -->
+      <xpath expr="//div[contains(@t-attf-class, 'o_standard_footer')]" position="replace">
+        <div t-attf-class="footer o_standard_footer o_company_#{company.id}_layout">
+          <t t-if="doc and doc._name == 'sale.order'">
+            <t t-call="asi_custom_sale.signature_footer_common"/>
+          </t>
+          <t t-else="">
+            <!-- Footer original en caso de no ser una orden de venta -->
+            <div class="text-center" style="border-top: 1px solid black;">
+              <ul class="list-inline mb4">
+                <div t-field="company.report_footer"/>
+              </ul>
+              <div t-if="report_type == 'pdf'" class="text-muted">
+                Page: <span class="page"/> / <span class="topage"/>
+              </div>
+              <div t-if="report_type == 'pdf' and display_name_in_footer" class="text-muted">
+                <span t-field="o.name"/>
+              </div>
+            </div>
+          </t>
+        </div>
+      </xpath>
+    </template>
+    
+    <!-- (Opcional) Para el layout boxed, de forma similar -->
+    <template id="external_layout_boxed_inherit" inherit_id="web.external_layout_boxed">
+      <xpath expr="//div[contains(@t-attf-class, 'o_boxed_footer')]" position="replace">
+        <div t-attf-class="footer o_boxed_footer">
+          <t t-if="doc and doc._name == 'sale.order'">
+            <t t-call="asi_custom_sale.signature_footer_common"/>
+          </t>
+          <t t-else=""> 
+            <!-- Footer original -->
+            <div class="text-center">
+              <div t-field="company.report_footer"/>
+              <div t-if="report_type == 'pdf'">
+                Page: <span class="page"/> / <span class="topage"/>
+              </div>
+            </div>
+          </t>
+        </div>
+      </xpath>
+    </template>
+   
        
-                      <xpath expr="//t[@t-call='web.external_layout']" position="before">
-                <div class="signature-section" style="margin-top: 50px; page-break-inside: avoid;">
-                    <div class="row">
-                        <!-- Firma de la empresa -->
-                        <div class="col-5">
-                            <table class="table table-borderless">
-                                <tbody>
-                                    <tr><td><strong>POR LA EMPRESA:</strong></td></tr>
-                                    <tr><td>___________________________________</td></tr>
-                                    <tr><td>Nombre y Apellido</td></tr>
-                                    <tr><td>Firma</td></tr>
-                                </tbody>
-                            </table>
+       
+       
+        <template id="report_saleorder_document" inherit_id="sale.report_saleorder_document">
+             <xpath expr="//div[hasclass('page')]" position="inside">
+               <style>
+                .page {
+                    margin: 0 !important;
+                    padding: 0 !important;
+                    font-size: 11pt;
+                }
+                .row {
+                    margin: 0 !important;
+                    padding: 0 !important;
+                }
+                .pt-5, .mt-5, .mb-5 {
+                    padding-top: 0 !important;
+                    margin-top: 0 !important;
+                    margin-bottom: 0 !important;
+                }
+                .article {
+                    margin-top: 0 !important;
+                    padding-top: 0 !important;
+                }
+            </style>
+                                
+            </xpath>       
+                  
+            <xpath expr="//div[@id='informations']" position="before">
+                <div class="row mt-1 mb-0 mw-100">  
+                    <div class="col-6" name="informations_company">
+                        <!-- Estilo para Datos de la Sociedad -->
+                        <div class="d-flex align-items-center mb-2">
+                            <strong class="col-6">Datos de la Sociedad:</strong>
                         </div>
-                        
-                        <!-- Espacio en blanco -->
-                        <div class="col-2"></div>
-                        
-                        <!-- Firma del cliente -->
-                        <div class="col-5">
-                            <table class="table table-borderless">
-                                <tbody>
-                                    <tr><td><strong>POR EL CLIENTE:</strong></td></tr>
-                                    <tr><td>___________________________________</td></tr>
-                                    <tr><td>Nombre y Apellido</td></tr>
-                                    <tr><td>Firma</td></tr>
-                                </tbody>
-                            </table>
+                        <div class="d-flex align-items-baseline">
+                            <strong class="col-4">Nombre:</strong>
+                            <span class="col-8" t-esc="doc.company_id.partner_id.name"/>
                         </div>
+                        <div class="d-flex align-items-baseline">
+                            <strong class="col-4">Dirección:</strong>
+                            <span class="col-8" t-esc="doc.company_id.partner_id.street"/>
+                        </div>
+                        <t t-if="doc.company_id.partner_id.vat">
+                            <div class="d-flex align-items-baseline">
+                                <strong class="col-4">NIT:</strong>
+                                <span class="col-8" t-esc="doc.company_id.partner_id.vat"/>
+                            </div>
+                        </t>
+                        <t t-if="doc.company_id.partner_id.commercial_registration_number">
+                            <div class="d-flex align-items-baseline">
+                                <strong class="col-4">IRCC:</strong>
+                                <span class="col-8" t-esc="doc.company_id.partner_id.commercial_registration_number"/>
+                            </div>
+                        </t>
+                        <t t-if="doc.company_id.partner_id.bank_accounts">
+                            <div class="d-flex align-items-baseline">
+                                <strong class="col-4">Cuenta bancaria:</strong>
+                                <span class="col-8" t-esc="doc.company_id.partner_id.bank_accounts.split('; ')[0] or 'No especificado'"/>
+                            </div>
+                        </t>
+                    </div>
+            
+                    <div class="col-6">
+                        <!-- Estilo para Datos del Cliente -->
+                        <div class="d-flex align-items-center mb-2">
+                            <strong class="col-4">Datos del Cliente:</strong>
+                        </div>
+                        <div class="d-flex align-items-baseline">
+                            <strong class="col-4">Nombre:</strong>
+                            <span class="col-8" t-esc="doc.partner_id.name"/>
+                        </div>
+                        <div class="d-flex align-items-baseline">
+                            <strong class="col-4">Dirección:</strong>
+                            <span class="col-8">
+                                <span t-esc="doc.partner_id.street"/>
+                                <t t-if="doc.partner_id.state_id">, <span t-esc="doc.partner_id.state_id.name"/></t>
+                            </span>
+                        </div>
+                        <t t-if="doc.partner_id.vat">
+                            <div class="d-flex align-items-baseline">
+                                <strong class="col-4">NIT:</strong>
+                                <span class="col-8" t-esc="doc.partner_id.vat"/>
+                            </div>
+                        </t>
+                        <t t-if="doc.partner_id.ref">
+                            <div class="d-flex align-items-baseline">
+                                <strong class="col-4">Código:</strong>
+                                <span class="col-8" t-esc="doc.partner_id.ref"/>
+                            </div>
+                        </t>
+                        <t t-if="doc.partner_id.bank_accounts">
+                            <div class="d-flex align-items-baseline">
+                                <strong class="col-4">Cuenta Bancaria:</strong>
+                                <span class="col-8" t-esc="doc.partner_id.bank_accounts"/>
+                            </div>
+                        </t>
+                        <t t-if="doc.partner_id.asi_contract">
+                            <div class="d-flex align-items-baseline">
+                                <strong class="col-4">Contrato:</strong>
+                                <span class="col-8" t-esc="doc.partner_id.asi_contract"/>
+                            </div>
+                        </t>
                     </div>
                 </div>
+                <p></p>
             </xpath>
-
-            <!-- CSS para control de espacios -->
-            <xpath expr="//style" position="before">
-                <style>
-                    .signature-section {
-                        margin-bottom: 30px;
-                        padding-top: 20px;
-                        border-top: 1px solid #000;
-                    }
-                    
-                    .signature-section table {
-                        width: 100%;
-                        margin-top: 15px;
-                    }
-                    
-                    .o_standard_footer {
-                        margin-top: 50px !important;
-                    }
-                </style>
+        
+        
+            <xpath expr="//h2[@class='mt-4']" position="attributes">
+                <attribute name="class">mt-1</attribute>
             </xpath>
- 
-
-
+            <xpath expr="//div[@name='so_total_summary']" position="after">
+                <div t-if="doc.payment_term_id" style="page-break-inside: avoid;">
+                     <div t-if="doc.payment_term_id"><strong>Plazo de pago: </strong> <t t-esc="doc.payment_term_id.name or 'No especificado'"/></div>            
+                 </div>                 
+            </xpath> 
+            
+             <xpath expr="//p[@name='order_note']/parent::div" position="after">
+                        
+             </xpath>
+          
         </template>
     </data>
 </odoo>
