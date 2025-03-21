@@ -29,3 +29,16 @@ class CalendarEvent(models.Model):
     def onchange_attendees_filter_domain(self):
         if self.attendees_filter_domain and self.attendees_filter_domain != "[]":
             self.partner_ids = [Command.link(attendee.id) for attendee in self._get_calendar_event_attendees_by_filter_domain()]
+
+    def get_recurrent_days(self, month):
+        self.ensure_one()
+        if not self.recurrence_id:
+            return [self.start.day] if self.start.month == month else []
+        
+        days = []
+        current_date = self.start
+        while current_date.year == self.start.year and current_date.month <= month:
+            if current_date.month == month:
+                days.append(current_date.day)
+            current_date += self.recurrence_id.interval_type
+        return days

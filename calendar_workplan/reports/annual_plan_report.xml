@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <template id="report_annual_plan">
+        <t t-call="web.html_container">
+            <t t-foreach="docs" t-as="doc">
+                <t t-call="web.external_layout">
+                    <div class="page">
+                        <h2>Plan Anual: <span t-field="doc.name"/></h2>
+                        <div class="row mt-4">
+                            <div class="col-6">
+                                <strong>Presentado por:</strong> <span t-field="doc.presented_by_partner_id.name"/>
+                            </div>
+                            <div class="col-6">
+                                <strong>Aprobado por:</strong> <span t-field="doc.approved_by_partner_id.name"/>
+                            </div>
+                        </div>
+
+                        <!-- Tabla de eventos agrupados por seccion -->
+                        <table class="table table-bordered mt-4">
+                            <thead>
+                                <tr>
+                                    <th>Seccion</th>
+                                    <th>Evento (Hora/Lugar)</th>
+                                    <th t-foreach="range(1,13)" t-as="month">
+                                        <span t-esc="datetime.datetime(2000, month, 1).strftime('%b')[0].upper()"/>
+                                    </th>
+                                    <th>Organizador</th>
+                                    <th>Participantes</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <t t-set="sections" t-value="doc.get_sections_with_events()"/>
+                                <t t-foreach="sections" t-as="section">
+                                    <tr t-foreach="section['events']" t-as="event">
+                                        <td t-if="event_index == 0" t-att-rowspan="len(section['events'])">
+                                            <span t-esc="section['name']"/>
+                                        </td>
+                                        <td>
+                                            <div>
+                                                <span t-esc="event.start.strftime('%H:%M')"/> - 
+                                                <span t-esc="event.stop.strftime('%H:%M')"/>
+                                                <t t-if="event.location">(<span t-esc="event.location"/>)</t>
+                                            </div>
+                                            <div><span t-field="event.name"/></div>
+                                        </td>
+                                        <t t-foreach="range(1,13)" t-as="month">
+                                            <td>
+                                                <t t-set="month_days" t-value="event.get_recurrent_days(month)"/>
+                                                <span t-esc="', '.join([str(d) for d in month_days])"/>
+                                            </td>
+                                        </t>
+                                        <td><span t-field="event.organizer_id.name"/></td>
+                                        <td>
+                                            <t t-foreach="event.channel_ids" t-as="channel">
+                                                <span t-field="channel.name"/>
+                                                <t t-if="not channel_last">, </t>
+                                            </t>
+                                        </td>
+                                    </tr>
+                                </t>
+                            </tbody>
+                        </table>
+                    </div>
+                </t>
+            </t>
+        </t>
+    </template>
+
+    <record id="action_report_annual_plan" model="ir.actions.report">
+        <field name="name">Plan Anual</field>
+        <field name="model">calendar_workplan.plan</field>
+        <field name="report_type">qweb-pdf</field>
+        <field name="report_name">calendar_workplan.report_annual_plan</field>
+        <field name="report_file">calendar_workplan.report_annual_plan</field>
+        <field name="binding_model_id" ref="model_calendar_workplan_plan"/>
+        <field name="binding_type">report</field>
+    </record>
+</odoo>

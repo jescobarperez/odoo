@@ -408,6 +408,19 @@ class CalendarWorkplanPlan(models.Model):
         # Eliminar duplicados
         return list(set(main_activities))
 
+    def get_sections_with_events(self):
+        sections = []
+        Section = self.env['calendar_workplan.section']
+        for section in Section.search([]):
+            events = self.meeting_ids.filtered(
+                lambda e: e.section_id == section
+            )
+            if events:
+                sections.append({
+                    'name': section.name,
+                    'events': events
+                })
+        return sections
 
 
 
@@ -422,6 +435,8 @@ class CalendarWorkplanPlan(models.Model):
             'res_id': self.id,
             'context': {'active_ids': [self.id]},
         }
+        
+        
        
     def action_print_report(self):
         # Llamar al reporte directamente

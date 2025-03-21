@@ -29,6 +29,7 @@
         'data/calendar_workplan_section_data.xml',
         'reports/workplan_report.xml',
         'reports/individual_plan_report.xml',
+        'reports/annual_plan_report.xml',
         'views/calendar_event_views.xml',
         'views/calendar_workplan_section_views.xml',
         'views/calendar_workplan_plan_views.xml',

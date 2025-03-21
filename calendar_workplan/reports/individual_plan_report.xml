@@ -79,6 +79,11 @@
                                 </t>
                             </tbody>
                         </table>
+                        <div style="page-break-inside: avoid; text-align: center; margin-top: 50px;">
+                            <div style="border: 2px solid black; width: 360px; height: 160px; display: inline-block;">
+                                <p style="margin-top: 75px;">Firma del empleado</p>
+                            </div>
+                        </div>
                     </div>
                 </t>
             </t>

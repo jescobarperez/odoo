@@ -21,6 +21,11 @@
                                         name="action_print_report"
                                         class="btn-primary"
                                         attrs="{'invisible': [('scope', '!=', 'monthly')]}"/>
+                                 <button string="Imprimir Plan Anual"
+                                        type="action"
+                                        name="%(calendar_workplan.action_report_annual_plan)d"
+                                        class="btn-primary"
+                                        attrs="{'invisible': [('scope', '!=', 'annual')]}"/>        
                                 </header>
                                 <sheet>
                                         <div class="oe_button_box" name="button_box">

@@ -72,7 +72,20 @@ class AccountMove(models.Model):
         
     def action_post(self):
         for invoice in self:
-            last_invoice = self.search([('state', '=', 'posted'), ('move_type', '=', 'out_invoice')], order='invoice_date desc', limit=1)
-            if last_invoice and invoice.invoice_date < last_invoice.invoice_date:
-                raise ValidationError("La fecha de la factura debe ser mayor o igual que la fecha de la ultima factura confirmada.")
-        return super(AccountInvoice, self).action_post()
+            # Verificar si la factura tiene una fecha válida
+            if not invoice.invoice_date:
+                raise ValidationError("La factura no tiene una fecha válida. Asigna una fecha antes de confirmarla.") 
+
+            # Buscar la última factura confirmada
+            last_invoice = self.search(
+                [('state', '=', 'posted'), ('move_type', '=', 'out_invoice')],
+                order='invoice_date desc',
+                limit=1
+            )
+
+            # Verificar si hay una factura anterior y si tiene una fecha válida
+            if last_invoice and last_invoice.invoice_date:
+                if invoice.invoice_date < last_invoice.invoice_date:
+                    raise ValidationError("La fecha de la factura debe ser mayor o igual que la fecha de la última factura confirmada.")
+
+        return super(AccountMove, self).action_post()
