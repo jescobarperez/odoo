@@ -1,5 +1,5 @@
 <odoo>
-    <data>
+    <data> 
          <record model="ir.ui.view" id="view_sale_order_form_inherit">
             <field name="name">sale.order.form.inherit</field>
             <field name="model">sale.order</field>
@@ -13,8 +13,7 @@
                 </xpath>
                 <xpath expr="//field[@name='user_id']" position="after">
                     <field name="project_responsible"/>
-                    <field name="asi_sign"/>
-                    <field name="client_sign"/>
+                    <field name="customer_signer_id"/>
                 </xpath>
                 
             </field>

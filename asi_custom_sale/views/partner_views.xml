@@ -30,11 +30,13 @@
                     <!-- Agregar campo después de 'function' -->
                     <xpath expr="//field[@name='function']" position="after">
                         <field name="can_sign_invoices" attrs="{'invisible': [('company_type', '=', 'company')]}"/>
+                        <field name="accreditation_sign_invoices_data" attrs="{'invisible': [('company_type', '=', 'company')]}"/>
                     </xpath>
             
                     <!-- Agregar campo en dirección de contacto -->
                     <xpath expr="//page[@name='contact_addresses']/field[@name='child_ids']/form//field[@name='function']" position="after">
                         <field name="can_sign_invoices" attrs="{'invisible': [('type', '!=', 'contact')]}"/>
+                        <field name="accreditation_sign_invoices_data" attrs="{'invisible': [('type', '!=', 'contact')]}"/>
                     </xpath>
                 </field>
         </record>
