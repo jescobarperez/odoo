@@ -24,7 +24,9 @@
                         <field name="subordination"/>
                         <field name="accreditation_data"/>
                     </xpath>
-            
+                <field name="property_product_pricelist" position="after">
+                  <field name="asi_contract" />
+                </field>               
                     <!-- Agregar campo después de 'function' -->
                     <xpath expr="//field[@name='function']" position="after">
                         <field name="can_sign_invoices" attrs="{'invisible': [('company_type', '=', 'company')]}"/>

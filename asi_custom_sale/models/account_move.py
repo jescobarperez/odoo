@@ -2,17 +2,16 @@ from odoo import models, fields, api
 from odoo.exceptions import ValidationError
 
 class AccountMove(models.Model):
-    _inherit = 'account.move'
-
+    _inherit = 'account.move' 
+  
     # Campos personalizados
-    reviewed = fields.Boolean(string="Revisada", default=False, readonly=True)
+    reviewed = fields.Boolean(string="Revisada", default=False, readonly=True) 
     review_date = fields.Date(string="Fecha de Revisión", readonly=True)
     customer_signer_id = fields.Many2one(
         'res.partner',
         string="Firmante del Cliente",
-        domain="[('can_sign_invoices', '=', True)]",
-        help="Persona autorizada para firmar facturas por parte del cliente."
-    )
+        domain="[('can_sign_invoices', '=', True), ('parent_id', '=', partner_id)]",
+        help="Persona autorizada para firmar facturas por parte del cliente.")
     amount_in_words = fields.Char(string='Importe en Letras', compute='_compute_amount_in_words', store=True )               
     sale_order_names = fields.Char(
         string="Órdenes de Venta",
@@ -27,6 +26,21 @@ class AccountMove(models.Model):
             'reviewed': True,
             'review_date': fields.Datetime.now(),
         })
+
+    @api.onchange('partner_id')
+    def _onchange_partner_id(self):
+        if self.partner_id:
+            return {
+                'domain': {
+                    'customer_signer_id': [
+                        ('can_sign_invoices', '=', True),
+                        ('parent_id', '=', self.partner_id.id)
+                    ]
+                }
+            }
+        else:
+            return False
+
 
     # Restricción para evitar que se marque como revisada una factura no publicada
     @api.constrains('reviewed')

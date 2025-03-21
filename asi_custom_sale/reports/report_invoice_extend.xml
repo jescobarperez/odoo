@@ -1,40 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <odoo>
     
-
-    <template id="report_invoice_document_extend" inherit_id="account.report_invoice_document">
-     <xpath expr="." position="inside">
-          <style type="text/css">
-            .mt-5 { margin-top: 0 !important; }
-            .mb-5 { margin-bottom: 0 !important; }
-          </style>
-            <style>
-                .signature-line div {
-                    margin-top: 15px;
-                    min-height: 20px;
-                    border-bottom: 1px solid #000;
-                    width: 100%;
-                    padding: 0 5px;
-                }
-                
-                .signature-section table {
-                    width: 100%;
-                    height: 180px;
-                    margin-bottom: 20px;
-                }
-                
-                .signature-section strong {
-                    display: block;
-                    margin-bottom: 10px;
-                }
-                
-                .table-borderless td {
-                    border: none !important;
-                    vertical-align: bottom;
-                }
-            </style>
-
-        </xpath>
+       <template id="report_invoice_document_extend" inherit_id="account.report_invoice_document">
+     
 
         <xpath expr="//div[@name='shipping_address_block']/ancestor::div[contains(@class, 'row')]" position="replace">
             <!-- elimino el parrafo de las direcciones -->
@@ -122,11 +90,6 @@
             </div>
             <p></p>
         </xpath>
-        <xpath expr="//div[@id='informations']" position="inside">
-            <div t-if="o.sale_order_names">
-                <strong>Ref:</strong> <t t-esc="o.sale_order_names"/>
-            </div>
-        </xpath>
 
         <xpath expr="//div[hasclass('page')]" position="inside">
             <style>
@@ -148,82 +111,6 @@
         <!-- Agregar la tabla de firma antes del footer -->
         
 
-            <!-- Sección de firmas modificada -->
-       <!-- Sección de firmas con líneas fijas -->
-    <div class="row mt-4 signature-section" style="page-break-inside: avoid;">
-        
-        <!-- Entregado por -->
-        <div class="col-3 mb-4">
-            <table class="table table-sm table-borderless">
-                <tbody>
-                    <tr>
-                        <td>
-                            <strong>ENTREGADO POR:</strong>
-                            <div class="signature-line">
-                                <div>Nombre: </div><p/>
-                                <div>Firma:</div><p/>
-                                <div>Fecha:</div><p/>
-                            </div>
-                        </td>
-                    </tr>
-                </tbody>
-            </table>
-        </div>
-
-        <!-- Recibido por -->
-        <div class="col-3 mb-4">
-            <table class="table table-sm table-borderless">
-                <tbody>
-                    <tr>
-                        <td>
-                            <strong>RECIBIDO POR:</strong>
-                            <div class="signature-line">
-                                <div>Nombre:</div><p/>
-                                <div>Firma:</div><p/>
-                                <div>Fecha:</div><p/>
-                            </div>
-                        </td>
-                    </tr>
-                </tbody>
-            </table>
-        </div>
-
-        <!--  Transportado por  -->
-        <div class="col-3 mb-4">
-            <table class="table table-sm table-borderless">
-                <tbody>
-                    <tr>
-                        <td>
-                            <strong>TRANSPORTADO POR:</strong>
-                            <div class="signature-line">
-                                <div>Nombre:</div><p/>
-                                <div>Firma:</div><p/>
-                                <div>Fecha:</div><p/>
-                            </div>
-                        </td>
-                    </tr>
-                </tbody>
-            </table>
-        </div>
-
-        <!-- Contabilizado por -->
-        <div class="col-3 mb-4">
-            <table class="table table-sm table-borderless">
-                <tbody>
-                    <tr>
-                        <td>
-                            <strong>CONTABILIZADO POR:</strong>
-                            <div class="signature-line">
-                                <div>Nombre:</div><p/>
-                                <div>Firma:</div><p/>
-                                <div>Fecha:</div><p/>
-                            </div>
-                        </td>
-                    </tr>
-                </tbody>
-            </table>
-        </div>
-    </div>
 
         </xpath>
     </template>

@@ -8,6 +8,7 @@ class ResPartner(models.Model):
     subordination = fields.Char(string='Subordinación')
     accreditation_data = fields.Text(string='Datos de Acreditación')
     can_sign_invoices = fields.Boolean(string='Puede Firmar Facturas')  
+    accreditation_sign_invoices_data = fields.Text(string='Datos de Acreditación para firmar facturas')
     bank_accounts = fields.Text(compute='_compute_bank_accounts', store=True)
     asi_contract = fields.Char('Contract')
     
