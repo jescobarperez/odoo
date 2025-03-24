@@ -1,67 +1,57 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <odoo>
-    
-      <template id="report_invoice_document_extend" inherit_id="account.report_invoice_document">
-    <!-- Eliminar el bloque de direcciones -->
-    <xpath expr="//div[@name='shipping_address_block']/ancestor::div[contains(@class, 'row')]" position="replace">
-        <t/>
-    </xpath>
+    <template id="report_invoice_document_extend" inherit_id="account.report_invoice_document">
+        <!-- Eliminar el bloque de direcciones -->
+        <xpath expr="//div[@name='shipping_address_block']/ancestor::div[contains(@class, 'row')]" position="replace">
+            <t/>
+        </xpath>
 
-    <!-- Eliminar el bloque de código del cliente -->
-    <xpath expr="//div[@name='customer_code']" position="replace"/>
+        <!-- Eliminar el bloque de código del cliente -->
+        <xpath expr="//div[@name='customer_code']" position="replace"/>
 
-    <!-- Insertar los datos de la sociedad y el cliente -->
-    <xpath expr="//div[@id='informations']" position="before">
-        <div class="mt-1 mb-0 mw-100">
-            <!-- Datos de la Sociedad -->
-            <div class="col-12 mb-4">
-                <div class="card">
-                    <div class="card-header bg-light">
+        <!-- Insertar los datos de la sociedad y el cliente -->
+        <xpath expr="//div[@id='informations']" position="before">
+            <div class="mt-0 mb-0">
+                <!-- Datos de la Sociedad -->
+                <div class="compact-card mb-2">
+                    <div class="compact-header">
                         <strong>Datos de la Sociedad</strong>
                     </div>
-                    <div class="card-body">
-                        <div class="row mb-2">
+                    <div class="compact-body">
+                        <div class="compact-row">
                             <strong class="col-4">Nombre:</strong>
                             <span class="col-8" t-esc="o.company_id.partner_id.name"/>
                         </div>
-                        <div class="row mb-2">
+                        <div class="compact-row">
                             <strong class="col-4">Dirección:</strong>
                             <span class="col-8" t-esc="o.company_id.partner_id.street"/>
                         </div>
                         <t t-if="o.company_id.partner_id.vat">
-                            <div class="row mb-2">
+                            <div class="compact-row">
                                 <strong class="col-4">NIT:</strong>
                                 <span class="col-8" t-esc="o.company_id.partner_id.vat"/>
                             </div>
                         </t>
                         <t t-if="o.company_id.partner_id.commercial_registration_number">
-                            <div class="row mb-2">
+                            <div class="compact-row">
                                 <strong class="col-4">IRCC:</strong>
                                 <span class="col-8" t-esc="o.company_id.partner_id.commercial_registration_number"/>
                             </div>
-                        </t>
-                        <t t-if="o.company_id.partner_id.bank_accounts">
-                            <div class="row mb-2">
-                                <strong class="col-4">Cuenta bancaria:</strong>
-                                <span class="col-8" t-esc="o.company_id.partner_id.bank_accounts.split('; ')[0] or 'No especificado'"/>
-                            </div>
-                        </t>
+                        </t>                        
                     </div>
                 </div>
-            </div>
 
-            <!-- Datos del Cliente -->
-            <div class="col-12">
-                <div class="card">
-                    <div class="card-header bg-light">
+                <!-- Datos del Cliente -->
+                <div class="compact-card">
+                    <div class="compact-header">
                         <strong>Datos del Cliente</strong>
                     </div>
-                    <div class="card-body">
-                        <div class="row mb-2">
+                    <div class="compact-body">
+                        <div class="compact-row">
                             <strong class="col-4">Nombre:</strong>
                             <span class="col-8" t-esc="o.partner_id.name"/>
                         </div>
-                        <div class="row mb-2">
+                        <div class="compact-row">
                             <strong class="col-4">Dirección:</strong>
                             <span class="col-8">
                                 <span t-esc="o.partner_id.street"/>
@@ -69,25 +59,25 @@
                             </span>
                         </div>
                         <t t-if="o.partner_id.vat">
-                            <div class="row mb-2">
+                            <div class="compact-row">
                                 <strong class="col-4">NIT:</strong>
                                 <span class="col-8" t-esc="o.partner_id.vat"/>
                             </div>
                         </t>
                         <t t-if="o.partner_id.ref">
-                            <div class="row mb-2">
+                            <div class="compact-row">
                                 <strong class="col-4">Código:</strong>
                                 <span class="col-8" t-esc="o.partner_id.ref"/>
                             </div>
                         </t>
                         <t t-if="o.partner_id.bank_accounts">
-                            <div class="row mb-2">
+                            <div class="compact-row">
                                 <strong class="col-4">Cuenta Bancaria:</strong>
                                 <span class="col-8" t-esc="o.partner_id.bank_accounts"/>
                             </div>
                         </t>
                         <t t-if="o.partner_id.asi_contract">
-                            <div class="row mb-2">
+                            <div class="compact-row">
                                 <strong class="col-4">Contrato:</strong>
                                 <span class="col-8" t-esc="o.partner_id.asi_contract"/>
                             </div>
@@ -95,47 +85,55 @@
                     </div>
                 </div>
             </div>
-        </div>
-        <p></p>
-    </xpath>
+        </xpath>
 
-    <!-- Estilos adicionales -->
-    <xpath expr="//div[hasclass('page')]" position="inside">
-        <style>
-            .page {
-                font-size: 12pt;
-            }
-            .card {
-                margin-bottom: 10px;
-                border: 1px solid #ddd;
-                border-radius: 4px;
-            }
-            .card-header {
-                background-color: #f8f9fa;
-                padding: 5px 10px;
-                border-bottom: 1px solid #ddd;
-                font-size: 14px;
-                font-weight: bold;
-            }
-            .card-body {
-                padding: 15px;
-            }
-            .row {
-                margin-bottom: 5px;
-            }
-            strong {
-                font-weight: 600;
-            }
-        </style>
-    </xpath>
+        <!-- Estilos optimizados -->
+        <xpath expr="//div[hasclass('page')]" position="inside">
+            <style>
+                .page {
+                    font-size: 12pt;
+                }
+                .compact-card {
+                    margin-bottom: 8px;
+                    border: 1px solid #e0e0e0;
+                    border-radius: 3px;
+                }
+                .compact-header {
+                    background-color: #f5f5f5;
+                    padding: 3px 8px;
+                    border-bottom: 1px solid #e0e0e0;
+                    font-size: 13px;
+                    font-weight: bold;
+                }
+                .compact-body {
+                    padding: 8px;
+                }
+                .compact-row {
+                    display: flex;
+                    margin-bottom: 2px;
+                    line-height: 1.2;
+                }
+                .compact-row strong {
+                    min-width: 30%;
+                    font-weight: 500;
+                }
+                .compact-row span {
+                    flex-grow: 1;
+                }
+                .col-4, .col-8 {
+                    padding: 0 5px;
+                }
+            </style>
+        </xpath>
 
-    <!-- Modificar la forma de pago -->
-    <xpath expr="//p[@name='payment_communication']" position="replace">
-        <p>
-            <strong>Forma de Pago:</strong> <t t-esc="'Cheque o Transferencia'"/>.
-            <strong> Plazo:</strong> <t t-esc="o.invoice_payment_term_id.name or 'No especificado'"/>.
-            <strong> Importe en letras:</strong> <t t-esc="o.amount_in_words or 'No especificado'"/>.
-        </p>
-    </xpath>
-</template> 
-</odoo>
+        <!-- Modificar la forma de pago -->
+        <xpath expr="//p[@name='payment_communication']" position="replace">
+            <p style="margin: 5px 0; line-height: 1.2;">
+                <strong>Forma de Pago:</strong> <t t-esc="'Cheque o Transferencia'"/>.
+                <strong>Plazo:</strong> <t t-esc="o.invoice_payment_term_id.name or 'No especificado'"/>.
+                <strong>Páguese a cuenta bancaria:</strong> <t t-esc="o.company_id.partner_id.bank_accounts.split('; ')[0] or 'No especificado'"/>.
+                <strong>Importe en letras:</strong> <t t-esc="o.amount_in_words or 'No especificado'"/>.
+             </p>
+        </xpath>
+    </template>
+</odoo> 
