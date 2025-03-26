@@ -4,10 +4,10 @@
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: Odoo Server 16.0-20240904\n"
+"Project-Id-Version: Odoo Server 16.0-20250131\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2025-02-26 12:09+0000\n"
-"PO-Revision-Date: 2025-02-26 12:09+0000\n"
+"POT-Creation-Date: 2025-03-25 19:32+0000\n"
+"PO-Revision-Date: 2025-03-25 19:32+0000\n"
 "Last-Translator: \n"
 "Language-Team: \n"
 "MIME-Version: 1.0\n"
@@ -33,6 +33,7 @@ msgid "<strong>Approved By:</strong>"
 msgstr "Aprobado por:"
 
 #. module: calendar_workplan
+#: model_terms:ir.ui.view,arch_db:calendar_workplan.report_annual_plan
 #: model_terms:ir.ui.view,arch_db:calendar_workplan.report_individual_plan
 msgid "<strong>Aprobado por:</strong>"
 msgstr ""
@@ -48,9 +49,9 @@ msgid "<strong>Período:</strong>"
 msgstr ""
 
 #. module: calendar_workplan
-#: model_terms:ir.ui.view,arch_db:calendar_workplan.report_workplan
-msgid "<strong>Plan Type:</strong>"
-msgstr "<strong>Tipo:</strong>"
+#: model_terms:ir.ui.view,arch_db:calendar_workplan.report_annual_plan
+msgid "<strong>Presentado por:</strong>"
+msgstr ""
 
 #. module: calendar_workplan
 #: model_terms:ir.ui.view,arch_db:calendar_workplan.report_workplan
@@ -147,7 +148,7 @@ msgstr "Participantes"
 #. module: calendar_workplan
 #: model:ir.model,name:calendar_workplan.model_calendar_event
 msgid "Calendar Event"
-msgstr "Calendario"
+msgstr "Evento de calendario"
 
 #. module: calendar_workplan
 #. odoo-python
@@ -228,6 +229,16 @@ msgstr "Fecha de fin"
 #: model_terms:ir.ui.view,arch_db:calendar_workplan.report_workplan
 msgid "Event"
 msgstr "Evento"
+
+#. module: calendar_workplan
+#: model_terms:ir.ui.view,arch_db:calendar_workplan.report_annual_plan
+msgid "Evento (Hora/Lugar)"
+msgstr ""
+
+#. module: calendar_workplan
+#: model_terms:ir.ui.view,arch_db:calendar_workplan.report_individual_plan
+msgid "Firma del empleado"
+msgstr ""
 
 #. module: calendar_workplan
 #: model:ir.model.fields,field_description:calendar_workplan.field_calendar_workplan_plan__message_follower_ids
@@ -315,6 +326,11 @@ msgstr ""
 
 #. module: calendar_workplan
 #: model_terms:ir.ui.view,arch_db:calendar_workplan.calendar_workplan_plan_view_form
+msgid "Imprimir Plan Anual"
+msgstr ""
+
+#. module: calendar_workplan
+#: model_terms:ir.ui.view,arch_db:calendar_workplan.calendar_workplan_plan_view_form
 msgid "Imprimir Plan Individual"
 msgstr ""
 
@@ -348,13 +364,13 @@ msgstr ""
 #: model:ir.model.fields,field_description:calendar_workplan.field_calendar_workplan_plan__write_uid
 #: model:ir.model.fields,field_description:calendar_workplan.field_calendar_workplan_section__write_uid
 msgid "Last Updated by"
-msgstr ""
+msgstr "Actualizado por"
 
 #. module: calendar_workplan
 #: model:ir.model.fields,field_description:calendar_workplan.field_calendar_workplan_plan__write_date
 #: model:ir.model.fields,field_description:calendar_workplan.field_calendar_workplan_section__write_date
 msgid "Last Updated on"
-msgstr ""
+msgstr "Actualizado el "
 
 #. module: calendar_workplan
 #: model_terms:ir.ui.view,arch_db:calendar_workplan.report_workplan
@@ -364,7 +380,7 @@ msgstr "Ubicación"
 #. module: calendar_workplan
 #: model_terms:ir.ui.view,arch_db:calendar_workplan.report_workplan
 msgid "Main Activities"
-msgstr "Principal"
+msgstr "Actividades principales"
 
 #. module: calendar_workplan
 #: model:ir.model.fields,field_description:calendar_workplan.field_calendar_workplan_plan__message_main_attachment_id
@@ -386,7 +402,7 @@ msgstr ""
 #. module: calendar_workplan
 #: model:ir.model.fields,field_description:calendar_workplan.field_calendar_workplan_plan__message_has_error
 msgid "Message Delivery error"
-msgstr ""
+msgstr "Error en la entrega"
 
 #. module: calendar_workplan
 #: model:ir.model.fields,field_description:calendar_workplan.field_calendar_workplan_plan__message_ids
@@ -459,6 +475,11 @@ msgid "Number of messages with delivery error"
 msgstr ""
 
 #. module: calendar_workplan
+#: model_terms:ir.ui.view,arch_db:calendar_workplan.report_annual_plan
+msgid "Organizador"
+msgstr ""
+
+#. module: calendar_workplan
 #: model:ir.model.fields,field_description:calendar_workplan.field_calendar_workplan_plan__parent_path
 #: model:ir.model.fields,field_description:calendar_workplan.field_calendar_workplan_section__parent_path
 msgid "Parent Path"
@@ -477,6 +498,11 @@ msgid "Parent Section"
 msgstr "Sección padre"
 
 #. module: calendar_workplan
+#: model_terms:ir.ui.view,arch_db:calendar_workplan.report_annual_plan
+msgid "Participantes"
+msgstr ""
+
+#. module: calendar_workplan
 #: model_terms:ir.ui.view,arch_db:calendar_workplan.report_workplan
 msgid "Participants"
 msgstr "Participantes"
@@ -486,6 +512,16 @@ msgstr "Participantes"
 #: model_terms:ir.ui.view,arch_db:calendar_workplan.calendar_workplan_plan_view_form
 #: model_terms:ir.ui.view,arch_db:calendar_workplan.calendar_workplan_plan_view_search
 msgid "Plan"
+msgstr ""
+
+#. module: calendar_workplan
+#: model:ir.actions.report,name:calendar_workplan.action_report_annual_plan
+msgid "Plan Anual"
+msgstr ""
+
+#. module: calendar_workplan
+#: model_terms:ir.ui.view,arch_db:calendar_workplan.report_annual_plan
+msgid "Plan Anual:"
 msgstr ""
 
 #. module: calendar_workplan
@@ -552,6 +588,11 @@ msgstr "Responsable"
 #: model:ir.model.fields,field_description:calendar_workplan.field_calendar_workplan_plan__scope
 msgid "Scope"
 msgstr "Alcance"
+
+#. module: calendar_workplan
+#: model_terms:ir.ui.view,arch_db:calendar_workplan.report_annual_plan
+msgid "Seccion"
+msgstr "Sección"
 
 #. module: calendar_workplan
 #: model:ir.model.fields,field_description:calendar_workplan.field_calendar_event__section_id
@@ -625,17 +666,17 @@ msgstr ""
 #. module: calendar_workplan
 #: model:res.groups,name:calendar_workplan.calendar_workplan_group_user
 msgid "User"
-msgstr "usuario"
+msgstr "Usuario"
 
 #. module: calendar_workplan
 #: model:ir.model.fields,field_description:calendar_workplan.field_calendar_workplan_plan__utc_end
 msgid "Utc End"
-msgstr ""
+msgstr "Fin (utc)"
 
 #. module: calendar_workplan
 #: model:ir.model.fields,field_description:calendar_workplan.field_calendar_workplan_plan__utc_start
 msgid "Utc Start"
-msgstr ""
+msgstr "Inicio (utc)"
 
 #. module: calendar_workplan
 #: model:ir.model,name:calendar_workplan.model_calendar_workplan_plan

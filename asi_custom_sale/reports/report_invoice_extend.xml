@@ -25,6 +25,9 @@
                         <t t-if="o.company_id.partner_id.commercial_registration_number">
                             <div class="compact-row"><strong>IRCC:</strong> <span t-esc="o.company_id.partner_id.commercial_registration_number"/></div>
                         </t>
+                        <t t-if="o.company_id.partner_id.bank_accounts">
+                            <div class="compact-row"><strong>Cuenta Bancaria:</strong> <t t-esc="o.company_id.partner_id.bank_accounts.split('; ')[0] or 'No especificado'"/></div>
+                        </t>                           
                     </div>
                 </div>
 

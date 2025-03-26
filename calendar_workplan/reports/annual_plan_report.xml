@@ -4,22 +4,39 @@
         <t t-call="web.html_container">
             <t t-foreach="docs" t-as="doc">
                 <t t-call="web.external_layout">
-                    <div class="page">
+                    <div class="page" style="size: Letter landscape; margin: 0; padding: 15px; min-width: 279.4mm; min-height: 215.9mm;">
+                        <style>
+                            .table { 
+                                width: 100%; 
+                                table-layout: fixed;
+                                margin-top: 15px;
+                                border-collapse: collapse;
+                            }
+                            .table th, .table td {
+                                padding: 5px;
+                                border: 1px solid #dee2e6;
+                                font-size: 12px;
+                                vertical-align: top;
+                            }
+                        </style>
+
                         <h2>Plan Anual: <span t-field="doc.name"/></h2>
+                        
                         <div class="row mt-4">
                             <div class="col-6">
-                                <strong>Presentado por:</strong> <span t-field="doc.presented_by_partner_id.name"/>
+                                <strong>Presentado por:</strong> 
+                                <span t-field="doc.presented_by_partner_id.name"/>
                             </div>
                             <div class="col-6">
-                                <strong>Aprobado por:</strong> <span t-field="doc.approved_by_partner_id.name"/>
+                                <strong>Aprobado por:</strong> 
+                                <span t-field="doc.approved_by_partner_id.name"/>
                             </div>
                         </div>
 
-                        <!-- Tabla de eventos agrupados por seccion -->
                         <table class="table table-bordered mt-4">
                             <thead>
                                 <tr>
-                                    <th>Seccion</th>
+                                    <th>Sección</th>
                                     <th>Evento (Hora/Lugar)</th>
                                     <th t-foreach="range(1,13)" t-as="month">
                                         <span t-esc="datetime.datetime(2000, month, 1).strftime('%b')[0].upper()"/>
@@ -39,17 +56,21 @@
                                             <div>
                                                 <span t-esc="event.start.strftime('%H:%M')"/> - 
                                                 <span t-esc="event.stop.strftime('%H:%M')"/>
-                                                <t t-if="event.location">(<span t-esc="event.location"/>)</t>
+                                                <t t-if="event.location">
+                                                    (<span t-esc="event.location"/>)
+                                                </t>
                                             </div>
                                             <div><span t-field="event.name"/></div>
                                         </td>
                                         <t t-foreach="range(1,13)" t-as="month">
                                             <td>
-                                                <t t-set="month_days" t-value="event.get_recurrent_days(month)"/>
-                                                <span t-esc="', '.join([str(d) for d in month_days])"/>
+                                                <!-- Corrección clave aquí -->
+                                                <t t-set="month_days" 
+                                                   t-value="event.get_recurrent_days(int(doc.plan_year), month) if event.recurrence_id else []"/>
+                                                <span t-esc="', '.join([str(d) for d in month_days]) if month_days else ''"/>
                                             </td>
                                         </t>
-                                        <td><span t-field="event.organizer_id.name"/></td>
+                                        <td><span t-field="event.user_id.name"/></td>
                                         <td>
                                             <t t-foreach="event.channel_ids" t-as="channel">
                                                 <span t-field="channel.name"/>

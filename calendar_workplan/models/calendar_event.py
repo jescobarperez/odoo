@@ -1,6 +1,10 @@
 import ast
 from odoo import models, fields, api, Command
 from odoo.tools import ustr
+from dateutil.rrule import rrulestr
+from datetime import datetime
+
+    
 
 
 class CalendarEvent(models.Model):
@@ -30,15 +34,22 @@ class CalendarEvent(models.Model):
         if self.attendees_filter_domain and self.attendees_filter_domain != "[]":
             self.partner_ids = [Command.link(attendee.id) for attendee in self._get_calendar_event_attendees_by_filter_domain()]
 
-    def get_recurrent_days(self, month):
+    def get_recurrent_days(self, year, month):  # Añade el parámetro year
         self.ensure_one()
         if not self.recurrence_id:
-            return [self.start.day] if self.start.month == month else []
+            return []
         
-        days = []
-        current_date = self.start
-        while current_date.year == self.start.year and current_date.month <= month:
-            if current_date.month == month:
-                days.append(current_date.day)
-            current_date += self.recurrence_id.interval_type
-        return days
+        try:
+            # Obtener último día del mes
+            _, last_day = calendar.monthrange(year, month)
+            start_date = datetime(year, month, 1)
+            end_date = datetime(year, month, last_day)
+            
+            rrule = self.recurrence_id._get_rrule()
+            dates = list(rrule.between(start_date, end_date, inc=True))
+            
+            return list({d.day for d in dates if d.month == month})
+        except Exception as e:
+            _logger.error(f"Error calculando días recurrentes: {str(e)}")
+            return []
+

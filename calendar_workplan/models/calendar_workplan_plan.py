@@ -261,26 +261,16 @@ class CalendarWorkplanPlan(models.Model):
             and self._is_event_in_plan_date_range(e, plan_tz)
         )
 
+
     def get_main_activities(self):
-        """ Devuelve los eventos de calendario con prioridad alta para el partner que presenta el plan.
-            Reutiliza el método get_partner_meetings y filtra por prioridad alta.
-        """
+        """ Devuelve los eventos de calendario con prioridad alta para el partner que presenta el plan."""
         self.ensure_one()
-
-        # Obtener los eventos del partner que presenta el plan
         partner_meetings = self.get_partner_meetings()
-
-        # Filtrar solo los eventos con prioridad alta
-        main_activities = partner_meetings.filtered(lambda e: e.priority == '1')
-
-        # Formatear los resultados
-        return [{
-            'name': event.name,
-            'start': event.start_date,
-            'stop': event.stop_date,
-        } for event in main_activities]
-
-
+        main_activities = partner_meetings.filtered(lambda e: e.priority == '1').mapped('name')
+        return list(set(main_activities))  # Esto retorna una lista de strings    
+       
+       
+       
     # Método para obtener la fecha de inicio de la semana actual
     def get_current_week_start(self):
         self.ensure_one()
@@ -397,8 +387,30 @@ class CalendarWorkplanPlan(models.Model):
 
     # Metodos para el plan mensual
     def get_sorted_meetings(self):
-        # Ordenar los eventos por fecha de inicio (start)
-        return self.inherited_meeting_ids.sorted(key=lambda m: m.start)
+        self.ensure_one()
+        plan_tz = timezone(self.plan_tz or 'UTC')  # Obtener la zona horaria del plan
+        
+        # Obtener y ordenar los eventos por fecha de inicio
+        sorted_meetings = self.inherited_meeting_ids.sorted(key=lambda m: m.start)
+        
+        # Convertir las fechas a la zona horaria del plan
+        meetings_with_tz = []
+        for meeting in sorted_meetings:
+            meetings_with_tz.append({
+                'id': meeting.id,
+                'name': meeting.name,
+                'start': self.convert_utc_to_tz(meeting.start, plan_tz),
+                'stop': self.convert_utc_to_tz(meeting.stop, plan_tz),
+                'duration': meeting.duration,
+                'priority': meeting.priority,
+                'allday': meeting.allday,
+                'location': meeting.location,
+                'channel_ids': meeting.channel_ids,
+                'partner_ids': meeting.partner_ids,                
+                # Agrega otros campos que necesites
+            })
+        
+        return meetings_with_tz
     
     def get_main_month_activities(self):
         # Filtrar eventos de prioridad alta y obtener descripciones únicas
@@ -407,6 +419,9 @@ class CalendarWorkplanPlan(models.Model):
         ).mapped('name')
         # Eliminar duplicados
         return list(set(main_activities))
+  
+            
+        
 
     def get_sections_with_events(self):
         sections = []

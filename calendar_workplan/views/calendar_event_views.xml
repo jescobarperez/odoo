@@ -67,7 +67,7 @@
                                 </group>
                         </xpath>
                         <field name="categ_ids" position="after">
-                                <field name="workplan_id" readonly="1" />
+                                <field name="workplan_id" />
                                 <field name="workplan_scope" invisible="1" />
                                 <field name="section_id"
                                         attrs="{'invisible': [('workplan_scope', '!=', 'annual')]}" />

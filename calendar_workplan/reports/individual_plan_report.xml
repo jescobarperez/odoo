@@ -5,30 +5,36 @@
         <t t-call="web.html_container">
             <t t-foreach="docs" t-as="doc">
                 <t t-call="web.external_layout">
-                    <div class="page">
+                    <!-- Contenedor principal en formato Letter horizontal -->
+                    <div class="page" style="
+                        size: Letter landscape;
+                        margin: 0;
+                        padding: 15px;
+                        min-width: 279.4mm; 
+                        min-height: 215.9mm;  
+                    ">
+
+                        <!-- Encabezado -->
                         <h2>Plan Individual: <span t-field="doc.name"/></h2>
                         <p><strong>Período:</strong> <span t-field="doc.date_start"/> - <span t-field="doc.date_end"/></p>
                         <p><strong>Aprobado por:</strong> <span t-field="doc.approved_by_partner_id.name"/></p>
 
-                        <!-- Sección de Actividades Principales -->
+                        <!-- Actividades Principales -->
                         <h3>Actividades Principales</h3>
                         <ul>
                             <t t-set="main_activities" t-value="doc.get_main_activities()"/>
                             <t t-foreach="main_activities" t-as="activity">
-                                <li>
-                                    <span t-esc="activity['name']"/> 
-                                </li>
+                                <li><span t-esc="activity"/></li>
                             </t>
                         </ul>
 
-                        <!-- Tabla única para todas las semanas -->
+                        <!-- Tabla de semanas -->
                         <table class="table table-bordered">
                             <thead>
                                 <tr>
-                                    <!-- Encabezado con los días de la semana -->
                                     <t t-set="weekdays" t-value="['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado', 'Domingo']"/>
                                     <t t-foreach="weekdays" t-as="day">
-                                        <th>
+                                        <th style="background-color: #f8f9fa; text-align: center;">
                                             <span t-esc="day"/>
                                         </th>
                                     </t>
@@ -40,35 +46,37 @@
                                 <t t-foreach="weeks" t-as="week">
                                     <tr>
                                         <t t-foreach="week" t-as="day">
-                                            <td t-att-style="'background-color: #FFE4E1;' if doc.get_absences_for_day(day) else ''">
+                                            <td style="height: 120px;" t-att-style="'background-color: #FFE4E1;' if doc.get_absences_for_day(day) else ''">
                                                 <!-- Número del día -->
                                                 <t t-if="day">
-                                                    <span style="font-weight: bold; background-color: #AEB6BF;" t-esc="day.strftime('%d')"/>
+                                                    <div style="font-weight: bold; background-color: #AEB6BF; padding: 2px 5px; margin: -5px -5px 3px -5px;">
+                                                        <span t-esc="day.strftime('%d')"/>
+                                                    </div>
                                                 </t>
                                                 
-                                                <!-- Mostrar ausencias si existen -->
+                                                <!-- Ausencias -->
                                                 <t t-set="day_absences" t-value="doc.get_absences_for_day(day)"/>
                                                 <t t-if="day and day_absences">
-                                                    <div style="color: red; font-weight: bold;">
+                                                    <div style="color: red; font-weight: bold; font-size: 11px;">
                                                         <span t-esc="', '.join(day_absences)"/>
                                                     </div>
                                                 </t>
                                                 
-                                                <!-- Mostrar eventos solo si no hay ausencias -->
+                                                <!-- Eventos -->
                                                 <t t-if="day and not day_absences">
                                                     <t t-set="events" t-value="doc.get_events_by_day(day)"/>
                                                     <t t-foreach="events" t-as="event">
-                                                        <div>
+                                                        <div style="margin-bottom: 3px; font-size: 11px;">
                                                             <t t-if="event.get('allday')">
-                                                                <span style="font-weight: bold; font-size: smaller;">T/D:</span>
-                                                                <span t-esc="event['name']"/>
+                                                                <div style="font-weight: bold;">T/D:</div>
+                                                                <div t-esc="event['name']"/>
                                                             </t>
                                                             <t t-else="">
-                                                                <span style="font-weight: bold; font-size: smaller;">
+                                                                <div style="font-weight: bold;">
                                                                     <span t-esc="event['start'].strftime('%H:%M')"/> - 
-                                                                    <span t-esc="event['stop'].strftime('%H:%M')"/>:
-                                                                </span>
-                                                                <span t-esc="event['name']"/>
+                                                                    <span t-esc="event['stop'].strftime('%H:%M')"/>
+                                                                </div>
+                                                                <div t-esc="event['name']"/>
                                                             </t>
                                                         </div>
                                                     </t>
@@ -79,9 +87,11 @@
                                 </t>
                             </tbody>
                         </table>
-                        <div style="page-break-inside: avoid; text-align: center; margin-top: 50px;">
-                            <div style="border: 2px solid black; width: 360px; height: 160px; display: inline-block;">
-                                <p style="margin-top: 75px;">Firma del empleado</p>
+
+                        <!-- Sección de firma -->
+                        <div style="page-break-inside: avoid; margin-top: 25px; text-align: center;">
+                            <div style="border: 2px solid #000; width: 300px; height: 100px; display: inline-block; vertical-align: middle;">
+                                <p style="margin-top: 35px; font-size: 14px;">Firma del empleado</p>
                             </div>
                         </div>
                     </div>
@@ -90,7 +100,7 @@
         </t>
     </template>
 
-    <!-- Acción de informe -->
+    <!-- Acción de informe (sin cambios) -->
     <record id="action_report_individual_plan" model="ir.actions.report">
         <field name="name">Plan Individual</field>
         <field name="model">calendar_workplan.plan</field>
