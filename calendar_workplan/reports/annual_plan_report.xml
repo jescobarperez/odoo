@@ -6,8 +6,8 @@
                 <t t-call="web.external_layout">
                     <div class="page" style="size: Letter landscape; margin: 0; padding: 15px; min-width: 279.4mm; min-height: 215.9mm;">
                         <style>
-                            .table { 
-                                width: 100%; 
+                            .table {
+                                width: 100%;
                                 table-layout: fixed;
                                 margin-top: 15px;
                                 border-collapse: collapse;
@@ -17,6 +17,14 @@
                                 border: 1px solid #dee2e6;
                                 font-size: 12px;
                                 vertical-align: top;
+                            }
+                            .section-header {
+                                background-color: #f0f8ff;
+                                font-weight: bold;
+                            }
+                            .event-time {
+                                font-weight: bold;
+                                color: #2c3e50;
                             }
                         </style>
 
@@ -30,52 +38,55 @@
                             <div class="col-6">
                                 <strong>Aprobado por:</strong> 
                                 <span t-field="doc.approved_by_partner_id.name"/>
-                            </div>
+                            </div>                            
                         </div>
 
                         <table class="table table-bordered mt-4">
                             <thead>
                                 <tr>
-                                    <th>Sección</th>
-                                    <th>Evento (Hora/Lugar)</th>
+                                    <th>Evento</th>
                                     <th t-foreach="range(1,13)" t-as="month">
                                         <span t-esc="datetime.datetime(2000, month, 1).strftime('%b')[0].upper()"/>
                                     </th>
+                                    <th>Lugar</th>
                                     <th>Organizador</th>
-                                    <th>Participantes</th>
                                 </tr>
                             </thead>
                             <tbody>
-                                <t t-set="sections" t-value="doc.get_sections_with_events()"/>
+                                <t t-set="sections" t-value="doc.get_grouped_events_by_section()"/>
                                 <t t-foreach="sections" t-as="section">
-                                    <tr t-foreach="section['events']" t-as="event">
-                                        <td t-if="event_index == 0" t-att-rowspan="len(section['events'])">
+                                    <!-- Encabezado de sección -->
+                                    <tr class="section-header">
+                                        <td colspan="14">
                                             <span t-esc="section['name']"/>
                                         </td>
+                                    </tr>
+                                    
+                                    <!-- Eventos únicos sin duplicados -->
+                                    <t t-set="unique_events" t-value="section['events']"/>
+                                    <tr t-foreach="unique_events" t-as="event">
                                         <td>
-                                            <div>
-                                                <span t-esc="event.start.strftime('%H:%M')"/> - 
-                                                <span t-esc="event.stop.strftime('%H:%M')"/>
-                                                <t t-if="event.location">
-                                                    (<span t-esc="event.location"/>)
-                                                </t>
-                                            </div>
                                             <div><span t-field="event.name"/></div>
                                         </td>
                                         <t t-foreach="range(1,13)" t-as="month">
                                             <td>
-                                                <!-- Corrección clave aquí -->
-                                                <t t-set="month_days" 
-                                                   t-value="event.get_recurrent_days(int(doc.plan_year), month) if event.recurrence_id else []"/>
-                                                <span t-esc="', '.join([str(d) for d in month_days]) if month_days else ''"/>
+                                                <t t-if="event.recurrence_id">
+                                                    <t t-set="month_days" t-value="event.get_sorted_recurrent_days(int(doc.plan_year), month)"/>
+                                                    <span t-esc="', '.join([str(d) for d in month_days]) if month_days else ''"/>
+                                                </t>
+                                                <t t-else="">
+                                                    <t t-set="event_date" t-value="event.start_date or event.start"/>
+                                                    <t t-if="event_date and event_date.year == int(doc.plan_year) and event_date.month == month">
+                                                        <span t-esc="event_date.day"/>
+                                                    </t>
+                                                </t>
                                             </td>
                                         </t>
-                                        <td><span t-field="event.user_id.name"/></td>
                                         <td>
-                                            <t t-foreach="event.channel_ids" t-as="channel">
-                                                <span t-field="channel.name"/>
-                                                <t t-if="not channel_last">, </t>
-                                            </t>
+                                            <span t-esc="event.location or ''"/>
+                                        </td>
+                                        <td>
+                                            <span t-field="event.user_id.name"/>
                                         </td>
                                     </tr>
                                 </t>

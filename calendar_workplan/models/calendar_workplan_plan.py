@@ -419,8 +419,6 @@ class CalendarWorkplanPlan(models.Model):
         ).mapped('name')
         # Eliminar duplicados
         return list(set(main_activities))
-  
-            
         
 
     def get_sections_with_events(self):
@@ -437,7 +435,30 @@ class CalendarWorkplanPlan(models.Model):
                 })
         return sections
 
-
+    # Metodos del plan anual
+    def get_grouped_events_by_section(self):
+        """Agrupa eventos únicos por sección con hora localizada"""
+        self.ensure_one()
+        sections = []
+        
+        # Obtener eventos únicos (sin duplicados por recurrencia)
+        unique_events = self.meeting_ids.filtered(lambda e: not e.recurrence_id)
+        recurring_masters = self.meeting_ids.filtered(lambda e: e.recurrence_id and e.recurrence_id.calendar_event_ids[0] == e)
+        all_events = unique_events | recurring_masters
+        
+        # Agrupar por sección
+        for section in self.env['calendar_workplan.section'].search([], order='name'):
+            section_events = all_events.filtered(
+                lambda e: e.section_id == section
+            ).sorted(key=lambda e: e.start)  # Ordenar por hora
+            
+            if section_events:
+                sections.append({
+                    'name': section.name,
+                    'events': section_events
+                })
+        
+        return sections
 
     # Método para imprimir el informe "Plan Individual"
     def action_print_individual_plan(self):

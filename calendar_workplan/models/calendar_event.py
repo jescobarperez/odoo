@@ -3,9 +3,10 @@ from odoo import models, fields, api, Command
 from odoo.tools import ustr
 from dateutil.rrule import rrulestr
 from datetime import datetime
-
+import calendar  
+import logging  
     
-
+_logger = logging.getLogger(__name__)  
 
 class CalendarEvent(models.Model):
     _inherit = 'calendar.event'
@@ -53,3 +54,38 @@ class CalendarEvent(models.Model):
             _logger.error(f"Error calculando días recurrentes: {str(e)}")
             return []
 
+
+    def get_sections_with_events(self):
+        """Agrupa eventos por sección con ordenamiento"""
+        sections = []
+        Section = self.env['calendar_workplan.section']
+        
+        for section in Section.search([], order='name'):
+            events = self.meeting_ids.filtered(
+                lambda e: e.section_id == section
+            ).sorted(key=lambda e: e.start)  # Ordenar por hora de inicio
+            
+            if events:
+                sections.append({
+                    'name': section.name,
+                    'events': events
+                })
+        
+        return sections
+
+    def get_localized_time(self, plan_tz):
+        """Devuelve la hora formateada en la zona horaria del plan"""
+        self.ensure_one()
+        try:
+            tz = timezone(plan_tz or 'UTC')
+            start = self.start.astimezone(tz).strftime('%H:%M')
+            stop = self.stop.astimezone(tz).strftime('%H:%M')
+            return f"{start} - {stop}"
+        except Exception as e:
+            _logger.error("Error converting time: %s", str(e))
+            return self.display_time
+
+    def get_sorted_recurrent_days(self, year, month):
+        """Días recurrentes ordenados sin duplicados"""
+        days = list(set(self.get_recurrent_days(year, month)))  # Elimina duplicados
+        return sorted(days) if days else []    
