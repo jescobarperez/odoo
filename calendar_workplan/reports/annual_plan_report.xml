@@ -1,36 +1,82 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
+    <!-- Formato de papel landscape personalizado -->
+     <record id="paperformat_landscape" model="report.paperformat">
+        <field name="name">Custom Landscape</field>
+        <field name="orientation">Landscape</field>
+        <field name="margin_top">10</field>
+        <field name="margin_bottom">10</field>
+        <field name="margin_left">7</field>
+        <field name="margin_right">7</field>
+    </record>
+
+      <!-- Plantilla del reporte anual actualizada -->
     <template id="report_annual_plan">
         <t t-call="web.html_container">
             <t t-foreach="docs" t-as="doc">
                 <t t-call="web.external_layout">
-                    <div class="page" style="size: Letter landscape; margin: 0; padding: 15px; min-width: 279.4mm; min-height: 215.9mm;">
+                    <div class="page" style="margin: 0; padding: 15px;">
                         <style>
-                            .table {
-                                width: 100%;
-                                table-layout: fixed;
-                                margin-top: 15px;
-                                border-collapse: collapse;
+                            @page {
+                                size: landscape;
+                                margin: 0;
                             }
+                            .page {
+                                margin: 0 auto;
+                                padding: 15px;
+                            }
+                    
                             .table th, .table td {
                                 padding: 5px;
                                 border: 1px solid #dee2e6;
                                 font-size: 12px;
                                 vertical-align: top;
                             }
+                            
+                            .table th:nth-child(n+2),
+                            .table td:nth-child(n+2) {
+                                width: 4.5%;
+                                text-align: center;
+                            }
+                            
+                            .table th:first-child,
+                            .table td:first-child {
+                                width: 25%;
+                            }
+                            
+                            .table th:last-child,
+                            .table td:last-child {
+                                width: 15%;
+                            }
+                            
                             .section-header {
                                 background-color: #f0f8ff;
                                 font-weight: bold;
                             }
+                            
                             .event-time {
                                 font-weight: bold;
                                 color: #2c3e50;
                             }
+                            
+                            h2 {
+                                font-size: 1.8rem;
+                                margin-bottom: 20px;
+                            }
+                            
+                            .goals-section {
+                                margin: 20px 0;
+                                padding: 15px;
+                                background-color: #f8f9fa;
+                                border-radius: 5px;
+                            }
                         </style>
 
-                        <h2>Plan Anual: <span t-field="doc.name"/></h2>
-                        
-                        <div class="row mt-4">
+                        <h2>Objetivos de trabajo y plan de actividades</h2>                        
+                        <strong>Entidad: <span t-field="doc.company_id.name"/></strong>
+                        <p></p>
+                        <strong>Año: <span t-field="doc.plan_year"/></strong>  
+                        <div class="row mt-5 mb-5">
                             <div class="col-6">
                                 <strong>Presentado por:</strong> 
                                 <span t-field="doc.presented_by_partner_id.name"/>
@@ -38,9 +84,27 @@
                             <div class="col-6">
                                 <strong>Aprobado por:</strong> 
                                 <span t-field="doc.approved_by_partner_id.name"/>
-                            </div>                            
+                            </div>
                         </div>
+    
+                        <!-- Sección de Objetivos de Trabajo -->
 
+                        <div class="goals-section" t-if="doc.goal_ids">
+                            <h3>Objetivos de Trabajo</h3>
+                            <ul>
+                                <t t-foreach="doc.goal_ids" t-as="goal">
+                                    <li>
+                                        <span t-esc="goal.name"/>
+                                        <t t-if="goal.description">
+                                            <div class="text-muted" t-esc="goal.description"/>
+                                        </t>
+                                    </li>
+                                </t>
+                            </ul>
+                        </div>
+                        <div style="page-break-before: always;"></div>
+                        <h3>Plan de Actividades</h3>
+                        
                         <table class="table table-bordered mt-4">
                             <thead>
                                 <tr>
@@ -55,14 +119,12 @@
                             <tbody>
                                 <t t-set="sections" t-value="doc.get_grouped_events_by_section()"/>
                                 <t t-foreach="sections" t-as="section">
-                                    <!-- Encabezado de sección -->
                                     <tr class="section-header">
                                         <td colspan="14">
                                             <span t-esc="section['name']"/>
                                         </td>
                                     </tr>
                                     
-                                    <!-- Eventos únicos sin duplicados -->
                                     <t t-set="unique_events" t-value="section['events']"/>
                                     <tr t-foreach="unique_events" t-as="event">
                                         <td>
@@ -92,18 +154,26 @@
                                 </t>
                             </tbody>
                         </table>
+                         <!-- Sección de firma -->
+                        <div style="page-break-inside: avoid; margin-top: 25px; text-align: center;">
+                            <div style="border: 2px solid #000; width: 300px; height: 100px; display: inline-block; vertical-align: middle;">
+                                <p style="margin-top: 35px; font-size: 14px;">Firma de quien presenta</p>
+                            </div>
+                        </div>
                     </div>
                 </t>
             </t>
         </t>
     </template>
 
+    <!-- Actualización de la acción del reporte -->
     <record id="action_report_annual_plan" model="ir.actions.report">
         <field name="name">Plan Anual</field>
         <field name="model">calendar_workplan.plan</field>
         <field name="report_type">qweb-pdf</field>
         <field name="report_name">calendar_workplan.report_annual_plan</field>
         <field name="report_file">calendar_workplan.report_annual_plan</field>
+        <field name="paperformat_id" ref="paperformat_landscape"/>
         <field name="binding_model_id" ref="model_calendar_workplan_plan"/>
         <field name="binding_type">report</field>
     </record>
