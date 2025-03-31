@@ -239,6 +239,84 @@ class CalendarWorkplanPlan(models.Model):
             section.update({'workplan_ids': [Command.link(plan.id) for plan in plans.filtered(lambda it: it.scope == 'annual')]})
         return plans
 
+    @api.model
+    def _create_monthly_plan(self):
+        """Crea un plan mensual para el próximo mes si no existe"""
+        today = fields.Date.today()
+        next_month = today.month + 1 if today.month < 12 else 1
+        next_year = today.year if today.month < 12 else today.year + 1
+        
+        # Verificar si ya existe un plan mensual para el próximo mes
+        existing_plan = self.search([
+            ('scope', '=', 'monthly'),
+            ('plan_year', '=', '%04d' % next_year),
+            ('plan_month', '=', '%02d' % next_month)
+        ], limit=1)
+        
+        if existing_plan:
+            return existing_plan
+            
+        # Calcular fechas de inicio y fin del mes próximo
+        _, last_day = calendar.monthrange(next_year, next_month)
+        date_start = today.replace(month=next_month, year=next_year, day=1)
+        date_end = today.replace(month=next_month, year=next_year, day=last_day)
+        
+        # Solución definitiva - usar string directo sin traducción para evitar problemas
+        monthly_plan = self.create({
+            'scope': 'monthly',
+            'plan_year': '%04d' % next_year,
+            'plan_month': '%02d' % next_month,
+            'date_start': date_start,
+            'date_end': date_end,
+            'state': 'draft',
+            'name': 'Monthly Work Plan - %02d/%04d' % (next_month, next_year)
+        })
+        
+        return monthly_plan
+    
+    @api.model
+    def _create_individual_plans(self, monthly_plan):
+        """Crea planes individuales para cada empleado activo"""
+        Employee = self.env['hr.employee']
+        employees = Employee.search([('active', '=', True)])
+        
+        for employee in employees:
+            # Verificar si ya existe un plan individual para este empleado y mes
+            existing_plan = self.search([
+                ('scope', '=', 'individual'),
+                ('plan_year', '=', monthly_plan.plan_year),
+                ('plan_month', '=', monthly_plan.plan_month),
+                ('presented_by_partner_id', '=', employee.user_id.partner_id.id)
+            ], limit=1)
+            
+            if existing_plan:
+                continue
+                
+            # Crear plan individual
+            self.create({
+                'scope': 'individual',
+                'parent_id': monthly_plan.id,
+                'plan_year': monthly_plan.plan_year,
+                'plan_month': monthly_plan.plan_month,
+                'date_start': monthly_plan.date_start,
+                'date_end': monthly_plan.date_end,
+                'state': 'draft',
+                'presented_by_partner_id': employee.user_id.partner_id.id,
+                'name': _('Individual Work Plan - %s - %s/%s') % (
+                    employee.name, 
+                    monthly_plan.plan_month, 
+                    monthly_plan.plan_year
+                )
+            })
+    
+    @api.model
+    def generate_next_month_plans(self):
+        """Método principal que se llamará desde la acción planificada"""
+        monthly_plan = self._create_monthly_plan()
+        self._create_individual_plans(monthly_plan)
+        return True
+
+        
     def _from_date_to_orm_datetime(self, value, min=True):
         self.ensure_one()
         tz_value = datetime.combine(value, time.min if min else time.max, tzinfo=timezone(self.plan_tz))

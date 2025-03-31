@@ -26,6 +26,7 @@
         'security/calendar_workplan_groups.xml',
         'security/ir.model.access.csv',
         'data/base_automation_data.xml',
+        'data/ir_cron_actions.xml',
         'data/calendar_workplan_section_data.xml',
         'reports/workplan_report.xml',
         'reports/individual_plan_report.xml',
