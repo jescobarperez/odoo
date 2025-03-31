@@ -30,16 +30,36 @@ class CalendarWorkplanPlan(models.Model):
         return [('%02d' % (month_number + 1), _('%s', month_name)) for month_number, month_name in enumerate(calendar.month_name[1:])]
         
     @api.model
-    def _get_presented_by_partner_id(self):
+    def _get_default_presented_by(self):
+        """Obtiene el presentador según el tipo de plan"""
+        if self._context.get('scope') == 'individual' and self._context.get('employee_id'):
+            employee = self.env['hr.employee'].browse(self._context['employee_id'])
+            return employee.user_id.partner_id.id if employee.user_id else None
+        
+        # Para planes mensuales/anuales
+        company = self.env.company
+        if company.workplan_planner_partner_id:
+            return company.workplan_planner_partner_id.id
         return self.env.user.partner_id.id
 
     @api.model
-    def _get_approved_by_partner_id(self):
-        if self.env.user.employee_ids:
-            boss = self.env.user.employee_ids.parent_id
-            if boss and boss.user_id:
-                return boss.user_partner_id.mapped('id')[0]
+    def _get_default_approved_by(self):
+        """Obtiene el aprobador según el tipo de plan"""
+        if self._context.get('scope') == 'individual' and self._context.get('employee_id'):
+            employee = self.env['hr.employee'].browse(self._context['employee_id'])
+            if employee.parent_id and employee.parent_id.user_id:
+                return employee.parent_id.user_id.partner_id.id
+            return self.env.ref('base.partner_admin').id  # Fallback
         
+        # Para planes mensuales/anuales
+        company = self.env.company
+        if company.workplan_approver_partner_id:
+            return company.workplan_approver_partner_id.id
+        
+        # Fallback para aprobador de planes generales
+        return self.env.ref('base.partner_admin').id
+
+       
     name = fields.Char("Plan Name", required=True, compute='_compute_name',
                        store=True, translate=True)
     date_start = fields.Date("Start Date", required=True, tracking=True)
@@ -72,9 +92,20 @@ class CalendarWorkplanPlan(models.Model):
     parent_path = fields.Char(index=True, unaccent=False)
     active = fields.Boolean(default=True, tracking=True)
     plan_sequence = fields.Char(compute='_compute_name', store=True)
-    presented_by_partner_id = fields.Many2one("res.partner", string="Presented by", required=True, default=_get_presented_by_partner_id)
-    approved_by_partner_id = fields.Many2one("res.partner", string="Approved by", required=True, default=_get_approved_by_partner_id)
-
+    presented_by_partner_id = fields.Many2one(
+        "res.partner", 
+        string="Presented by", 
+        required=True, 
+        default=_get_default_presented_by,
+        domain="[('company_id', 'in', [False, company_id])]"
+    )
+    approved_by_partner_id = fields.Many2one(
+        "res.partner", 
+        string="Approved by", 
+        required=True, 
+        default=_get_default_approved_by,
+        domain="[('company_id', 'in', [False, company_id])]"
+    ) 
     goal_ids = fields.Many2many('gamification.challenge', relation='calendar_workplan_plan_goals', column1='plan_id', column2='goal_id', string="Plan's Goals", domain=[('challenge_category', '=', 'hr')])
     meeting_ids = fields.One2many('calendar.event', 'workplan_id', string="Meetings")
     inherited_meeting_ids = fields.Many2many('calendar.event', string="Inherited Meetings", compute="_compute_inherited_meeting_ids", recursive=True)
@@ -246,7 +277,6 @@ class CalendarWorkplanPlan(models.Model):
         next_month = today.month + 1 if today.month < 12 else 1
         next_year = today.year if today.month < 12 else today.year + 1
         
-        # Verificar si ya existe un plan mensual para el próximo mes
         existing_plan = self.search([
             ('scope', '=', 'monthly'),
             ('plan_year', '=', '%04d' % next_year),
@@ -256,12 +286,17 @@ class CalendarWorkplanPlan(models.Model):
         if existing_plan:
             return existing_plan
             
-        # Calcular fechas de inicio y fin del mes próximo
         _, last_day = calendar.monthrange(next_year, next_month)
         date_start = today.replace(month=next_month, year=next_year, day=1)
         date_end = today.replace(month=next_month, year=next_year, day=last_day)
         
-        # Solución definitiva - usar string directo sin traducción para evitar problemas
+        # Obtener presentador y aprobador para plan mensual
+        presented_by = self._get_default_presented_by()
+        approved_by = self._get_default_approved_by()
+        
+        if not presented_by or not approved_by:
+            raise UserError(_("Cannot create monthly workplan: missing planner or approver. Please configure default planners in company settings."))
+        
         monthly_plan = self.create({
             'scope': 'monthly',
             'plan_year': '%04d' % next_year,
@@ -269,11 +304,12 @@ class CalendarWorkplanPlan(models.Model):
             'date_start': date_start,
             'date_end': date_end,
             'state': 'draft',
-            'name': 'Monthly Work Plan - %02d/%04d' % (next_month, next_year)
+            'name': 'Monthly Work Plan - %02d/%04d' % (next_month, next_year),
+            'presented_by_partner_id': presented_by,
+            'approved_by_partner_id': approved_by
         })
         
-        return monthly_plan
-    
+        return monthly_plan    
     @api.model
     def _create_individual_plans(self, monthly_plan):
         """Crea planes individuales para cada empleado activo"""
@@ -281,19 +317,34 @@ class CalendarWorkplanPlan(models.Model):
         employees = Employee.search([('active', '=', True)])
         
         for employee in employees:
-            # Verificar si ya existe un plan individual para este empleado y mes
+            # Verificar si ya existe un plan individual
             existing_plan = self.search([
                 ('scope', '=', 'individual'),
                 ('plan_year', '=', monthly_plan.plan_year),
                 ('plan_month', '=', monthly_plan.plan_month),
-                ('presented_by_partner_id', '=', employee.user_id.partner_id.id)
+                ('presented_by_partner_id', '=', employee.user_id.partner_id.id if employee.user_id else False)
             ], limit=1)
             
             if existing_plan:
                 continue
                 
+            # Obtener presentador (empleado) y aprobador (jefe) para plan individual
+            presented_by = employee.user_id.partner_id.id if employee.user_id else None
+            approved_by = employee.parent_id.user_id.partner_id.id if employee.parent_id and employee.parent_id.user_id else None
+            
+            if not presented_by:
+                _logger.warning(f"Skipping workplan for employee {employee.name} (no user assigned)")
+                continue
+                
+            if not approved_by:
+                approved_by = self.env.ref('base.partner_admin').id  # Fallback
+                _logger.warning(f"Using admin as approver for employee {employee.name} (no manager assigned)")
+            
             # Crear plan individual
-            self.create({
+            self.with_context(
+                scope='individual',
+                employee_id=employee.id
+            ).create({
                 'scope': 'individual',
                 'parent_id': monthly_plan.id,
                 'plan_year': monthly_plan.plan_year,
@@ -301,14 +352,14 @@ class CalendarWorkplanPlan(models.Model):
                 'date_start': monthly_plan.date_start,
                 'date_end': monthly_plan.date_end,
                 'state': 'draft',
-                'presented_by_partner_id': employee.user_id.partner_id.id,
-                'name': _('Individual Work Plan - %s - %s/%s') % (
+                'presented_by_partner_id': presented_by,
+                'approved_by_partner_id': approved_by,
+                'name': 'Individual Work Plan - %s - %s/%s' % (
                     employee.name, 
                     monthly_plan.plan_month, 
                     monthly_plan.plan_year
                 )
-            })
-    
+            })    
     @api.model
     def generate_next_month_plans(self):
         """Método principal que se llamará desde la acción planificada"""

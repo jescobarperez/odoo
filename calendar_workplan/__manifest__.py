@@ -32,6 +32,7 @@
         'reports/individual_plan_report.xml',
         'reports/annual_plan_report.xml',
         'views/calendar_event_views.xml',
+        'views/res_company_views.xml',
         'views/calendar_workplan_section_views.xml',
         'views/calendar_workplan_plan_views.xml',
         'views/gamification_challenge_views.xml',
