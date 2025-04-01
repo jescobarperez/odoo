@@ -3,8 +3,7 @@
     'name': "Work Plan Management",
 
     'summary': """
-        Short (1 phrase/line) summary of the module's purpose, used as
-        subtitle on modules listing or apps.openerp.com""",
+        Implementacion de la Instruccion No 1 del Plan de Trabajo en Cuba""",
 
     'description': """
         Long description of module's purpose
@@ -16,7 +15,7 @@
 
     # Categories can be used to filter modules in modules listing
     'category': 'Productivity',
-    'version': '16.0',
+    'version': '16.0.1.0.0',
 
     # any module necessary for this one to work correctly
     'depends': ['base', 'calendar', 'mail', 'hr', 'base_automation', 'gamification'],

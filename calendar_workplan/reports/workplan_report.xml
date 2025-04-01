@@ -77,14 +77,7 @@
                                             </tr>
                                         </t>
                                 </tbody>
-                            </table>  
-                             <!-- Sección de firma -->
-                        <div style="page-break-inside: avoid; margin-top: 25px; text-align: center;">
-                            <div style="border: 2px solid #000; width: 300px; height: 100px; display: inline-block; vertical-align: middle;">
-                                <p style="margin-top: 35px; font-size: 14px;">Firma de quien presenta</p>
-                            </div>
-                        </div>
-                                                 
+                            </table>                       
                         </div>
                     </t>
                 </t>

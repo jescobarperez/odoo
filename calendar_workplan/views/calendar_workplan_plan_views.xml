@@ -25,9 +25,16 @@
                                         type="action"
                                         name="%(calendar_workplan.action_report_annual_plan)d"
                                         class="btn-primary"
-                                        attrs="{'invisible': [('scope', '!=', 'annual')]}"/>        
+                                        attrs="{'invisible': [('scope', '!=', 'annual')]}"/>       
+
+                    
+               
+            
                                 </header>
                                 <sheet>
+                                        <group>
+                                            <field name="state" widget="statusbar"/>
+                                        </group>
                                         <div class="oe_button_box" name="button_box">
                                                 <button class="oe_stat_button" name="child_ids_view"
                                                         type="object" icon="fa-sitemap">
@@ -169,5 +176,19 @@
                         'search_default_filter_date_start': 1}</field>
         </record>
 
-       
+       <record id="mail_template_plan_approval_request" model="mail.template">
+            <field name="name">Workplan Approval Request</field>
+            <field name="model_id" ref="model_calendar_workplan_plan"/>
+            <field name="subject">Approval requested for workplan ${object.name}</field>
+            <field name="email_from">${object.company_id.email or ''}</field>
+            <field name="email_to">${object.approved_by_partner_id.email or ''}</field>
+            <field name="body_html"><![CDATA[
+                <p>Dear ${object.approved_by_partner_id.name},</p>
+                <p>The workplan <strong>${object.name}</strong> has been submitted for your approval.</p>
+                <p>Please review it and take appropriate action.</p>
+                <p>You can access the plan directly by clicking <a href="${object.get_base_url()}/web#id=${object.id}&model=calendar_workplan.plan&view_type=form">here</a>.</p>
+                <p>Thank you,</p>
+                <p>${object.presented_by_partner_id.name}</p>
+            ]]></field>
+        </record>
 </odoo>

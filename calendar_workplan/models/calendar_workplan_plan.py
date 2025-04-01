@@ -1,12 +1,15 @@
 # -*- coding: utf-8 -*-
 
-from odoo import models, fields, api, _, Command
+from odoo import models, fields, api, _, Command, SUPERUSER_ID
 from odoo.fields import Date
 from odoo.addons.base.models.res_partner import _tz_get
 from odoo.exceptions import ValidationError, UserError
 from datetime import datetime, date, time, timedelta
+from dateutil.relativedelta import relativedelta
 import calendar
+import pytz
 from pytz import timezone, utc
+
 
 import logging
 
@@ -110,7 +113,19 @@ class CalendarWorkplanPlan(models.Model):
     meeting_ids = fields.One2many('calendar.event', 'workplan_id', string="Meetings")
     inherited_meeting_ids = fields.Many2many('calendar.event', string="Inherited Meetings", compute="_compute_inherited_meeting_ids", recursive=True)
 
-    plan_tz = fields.Selection(_tz_get, string='Timezone', default=lambda self: self._context.get('tz'), readonly=True)
+    plan_tz = fields.Selection(
+        _tz_get, 
+        string='Timezone', 
+        default=lambda self: self.env.user.tz or 'UTC',  # Fallback a UTC
+        required=True
+    )
+
+
+    _sql_constraints = [
+        ('check_valid_tz', 
+         "CHECK (plan_tz IN %s)" % str(tuple(pytz.all_timezones)),  # Lista de todas las zonas válidas
+         "La zona horaria seleccionada no es válida")
+]
     
     @api.depends('plan_month', 'plan_year', 'company_id')
     def _compute_name(self):
@@ -139,9 +154,7 @@ class CalendarWorkplanPlan(models.Model):
             # Set computed values
             record.plan_sequence = plan_sequence
             record.name = plan_name
-
-    
-    
+   
 
     def _is_event_in_plan_date_range(self, event, plan_tz):
         """ Verifica si el evento está dentro del rango de fechas del plan, considerando la zona horaria. """
@@ -186,6 +199,22 @@ class CalendarWorkplanPlan(models.Model):
 
             # Asignar todos los eventos encontrados
             plan.inherited_meeting_ids = all_meetings
+
+    @api.model
+    def _tz_get(self):
+        return [(tz, tz) for tz in sorted(pytz.all_timezones, key=lambda tz: tz if not tz.startswith('Etc/') else '_')]
+
+
+
+
+    def migrate(cr, version):
+        env = api.Environment(cr, SUPERUSER_ID, {})
+        plans = env['calendar_workplan.plan'].search([])
+        for plan in plans:
+            if not plan.plan_tz or isinstance(plan.plan_tz, bool):
+                plan.plan_tz = plan.env.user.tz or 'UTC'
+
+
 
     @api.depends('date_start', 'date_end', 'plan_tz')
     def _compute_utc_period_limits(self):
@@ -269,47 +298,89 @@ class CalendarWorkplanPlan(models.Model):
         for section in sections:
             section.update({'workplan_ids': [Command.link(plan.id) for plan in plans.filtered(lambda it: it.scope == 'annual')]})
         return plans
-
-    @api.model
-    def _create_monthly_plan(self):
-        """Crea un plan mensual para el próximo mes si no existe"""
-        today = fields.Date.today()
-        next_month = today.month + 1 if today.month < 12 else 1
-        next_year = today.year if today.month < 12 else today.year + 1
         
-        existing_plan = self.search([
-            ('scope', '=', 'monthly'),
-            ('plan_year', '=', '%04d' % next_year),
-            ('plan_month', '=', '%02d' % next_month)
+    @api.model
+    def _create_annual_plan(self, year):
+        """Crea un plan anual si no existe"""
+        existing_annual = self.search([
+            ('scope', '=', 'annual'),
+            ('plan_year', '=', '%04d' % year)
         ], limit=1)
         
-        if existing_plan:
-            return existing_plan
+        if existing_annual:
+            return existing_annual
             
-        _, last_day = calendar.monthrange(next_year, next_month)
-        date_start = today.replace(month=next_month, year=next_year, day=1)
-        date_end = today.replace(month=next_month, year=next_year, day=last_day)
-        
-        # Obtener presentador y aprobador para plan mensual
+        # Obtener presentador y aprobador para plan anual
         presented_by = self._get_default_presented_by()
         approved_by = self._get_default_approved_by()
         
         if not presented_by or not approved_by:
-            raise UserError(_("Cannot create monthly workplan: missing planner or approver. Please configure default planners in company settings."))
+            raise UserError(_("Cannot create annual workplan: missing planner or approver. Please configure default planners in company settings."))
         
-        monthly_plan = self.create({
+        annual_plan = self.create({
+            'scope': 'annual',
+            'plan_year': '%04d' % year,
+            'date_start': date(year, 1, 1),
+            'date_end': date(year, 12, 31),
+            'state': 'draft',
+            'name': f'Annual Work Plan - {year}',
+            'presented_by_partner_id': presented_by,
+            'approved_by_partner_id': approved_by,
+            'plan_tz': self.env.user.tz or 'UTC'
+        })
+        
+        return annual_plan
+
+    
+    @api.model
+    def _create_monthly_plan(self, year=None, month=None):
+        """Crea un plan mensual para el mes y año especificados"""
+        # 1. Determinar mes/año objetivo
+        today = fields.Date.today()
+        if not year or not month:
+            # Calcular próximo mes si no se especifican
+            next_month = today.month + 1 if today.month < 12 else 1
+            next_year = today.year + 1 if today.month == 12 else today.year
+        else:
+            # Validar parámetros recibidos
+            if not (1 <= month <= 12):
+                raise UserError(_("Mes inválido. Debe estar entre 1 y 12"))
+            next_month = month
+            next_year = year
+
+       
+        annual_plan = self._create_annual_plan(next_year)
+        
+        existing_monthly = self.search([
+            ('scope', '=', 'monthly'),
+            ('plan_year', '=', f"{next_year:04d}"),
+            ('plan_month', '=', f"{next_month:02d}"),
+            ('parent_id', '=', annual_plan.id)
+        ], limit=1)
+        
+        if existing_monthly:
+            return existing_monthly
+
+        try:
+            date_start = date(next_year, next_month, 1)
+            date_end = date_start + relativedelta(months=1, days=-1)
+        except ValueError as e:
+            raise UserError(_("Configuración de fecha inválida: %s") % e)
+        
+        return self.create({
             'scope': 'monthly',
-            'plan_year': '%04d' % next_year,
-            'plan_month': '%02d' % next_month,
+            'parent_id': annual_plan.id,
+            'plan_year': f"{next_year:04d}",
+            'plan_month': f"{next_month:02d}",
             'date_start': date_start,
             'date_end': date_end,
             'state': 'draft',
-            'name': 'Monthly Work Plan - %02d/%04d' % (next_month, next_year),
-            'presented_by_partner_id': presented_by,
-            'approved_by_partner_id': approved_by
+            'name': f'Monthly Work Plan - {next_month:02d}/{next_year:04d}',
+            'presented_by_partner_id': self._get_default_presented_by(),
+            'approved_by_partner_id': self._get_default_approved_by(),
+            'plan_tz': self.env.user.tz or 'UTC'
         })
-        
-        return monthly_plan    
+    
     @api.model
     def _create_individual_plans(self, monthly_plan):
         """Crea planes individuales para cada empleado activo"""
@@ -351,6 +422,7 @@ class CalendarWorkplanPlan(models.Model):
                 'plan_month': monthly_plan.plan_month,
                 'date_start': monthly_plan.date_start,
                 'date_end': monthly_plan.date_end,
+                'plan_tz':  employee.user_id.tz or  'UTC',
                 'state': 'draft',
                 'presented_by_partner_id': presented_by,
                 'approved_by_partner_id': approved_by,
@@ -360,23 +432,61 @@ class CalendarWorkplanPlan(models.Model):
                     monthly_plan.plan_year
                 )
             })    
+            
     @api.model
-    def generate_next_month_plans(self):
-        """Método principal que se llamará desde la acción planificada"""
-        monthly_plan = self._create_monthly_plan()
+    def generate_next_month_plans(self, year=None, month=None):
+        """Método principal con parámetros personalizables"""
+        monthly_plan = self._create_monthly_plan(year=year, month=month)
         self._create_individual_plans(monthly_plan)
         return True
-
-        
+    
     def _from_date_to_orm_datetime(self, value, min=True):
-        self.ensure_one()
-        tz_value = datetime.combine(value, time.min if min else time.max, tzinfo=timezone(self.plan_tz))
-        utc_value = tz_value.astimezone(utc)
-        return utc_value.replace(tzinfo=None)
-
-
-
-
+        _logger.info("=== INICIO CONVERSIÓN ===")
+        _logger.info("Fecha recibida (value): %s", value)
+        
+        if not value:
+            _logger.warning("Valor de fecha es False/None")
+            return False
+            
+        try:
+            # 1. Obtener zona horaria
+            tz_name = self.plan_tz or self.env.user.tz or 'UTC'
+            _logger.info("Zona horaria detectada: %s", tz_name)
+            
+            # 2. Validar zona
+            try:
+                user_tz = timezone(tz_name)
+                _logger.info("Zona horaria válida: %s", user_tz)
+            except Exception as e:
+                _logger.error("¡ERROR DE ZONA HORARIA! %s. Usando UTC como fallback.", str(e))
+                user_tz = timezone('UTC')
+    
+            # 3. Crear datetime naive local
+            naive_date = datetime.combine(value, time.min if min else time.max)
+            _logger.info("Naive date (local): %s", naive_date)
+            
+            # 4. Localizar y convertir a UTC
+            localized = user_tz.localize(naive_date, is_dst=None)
+            _logger.info("Localizado: %s", localized)
+            
+            utc_time = localized.astimezone(utc)
+            _logger.info("Convertido a UTC (aware): %s", utc_time)
+            
+            # 5. Hacerlo naive
+            naive_utc = utc_time.replace(tzinfo=None)
+            _logger.info("Naive UTC final: %s", naive_utc)
+            
+            # 6. Validar tipo de retorno
+            result = fields.Datetime.to_datetime(naive_utc)
+            _logger.info("Retornando: %s (tipo: %s)", result, type(result))
+            
+            return result
+            
+        except Exception as e:
+            _logger.exception("¡EXCEPCIÓN CRÍTICA EN CONVERSIÓN!")
+            raise UserError(_("Error fatal al convertir fechas: %s") % str(e))
+        
+        
     def get_partner_meetings(self):
         """ Filtra los eventos de inherited_meeting_ids donde:
             1. El presented_by_partner_id es asistente.
