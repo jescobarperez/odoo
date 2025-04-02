@@ -30,7 +30,22 @@ class CalendarWorkplanPlan(models.Model):
 
     @api.model
     def _get_months(self):
-        return [('%02d' % (month_number + 1), _('%s', month_name)) for month_number, month_name in enumerate(calendar.month_name[1:])]
+        # Usar nombres en inglés como clave de traducción
+        months = [
+            ('01', _('January')),
+            ('02', _('February')),
+            ('03', _('March')),
+            ('04', _('April')),
+            ('05', _('May')),
+            ('06', _('June')),
+            ('07', _('July')),
+            ('08', _('August')),
+            ('09', _('September')),
+            ('10', _('October')),
+            ('11', _('November')),
+            ('12', _('December')),
+        ]
+        return months
         
     @api.model
     def _get_default_presented_by(self):

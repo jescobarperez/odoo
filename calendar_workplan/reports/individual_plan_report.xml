@@ -1,5 +1,20 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
+    <!-- Formato de papel horizontal -->
+    <record id="paperformat_landscape_custom" model="report.paperformat">
+        <field name="name">Custom Landscape (Letter)</field>
+        <field name="format">Letter</field>
+        <field name="orientation">Landscape</field>
+        <field name="page_height">0</field>
+        <field name="page_width">0</field>
+        <field name="margin_top">15</field>
+        <field name="margin_bottom">15</field>
+        <field name="margin_left">15</field>
+        <field name="margin_right">15</field>
+        <field name="header_line" eval="False"/>
+        <field name="dpi">90</field>
+    </record>
+
     <!-- Plantilla del informe corregida -->
     <template id="report_individual_plan">
         <t t-call="web.html_container">
@@ -7,12 +22,17 @@
                 <t t-call="web.external_layout">
                     <!-- Contenedor principal en formato Letter horizontal -->
                     <div class="page" style="
-                        size: Letter landscape;
                         margin: 0;
                         padding: 15px;
-                        min-width: 279.4mm; 
-                        min-height: 215.9mm;  
+                        min-width: 279.4mm;
+                        min-height: 215.9mm;
                     ">
+                        <style>
+                            @page {
+                                size: landscape;
+                                margin: 15mm;
+                            }
+                        </style>
 
                         <!-- Encabezado -->
                         <h2>Plan Individual: <span t-field="doc.name"/></h2>
@@ -41,7 +61,6 @@
                                 </tr>
                             </thead>
                             <tbody>
-                                <!-- Iterar sobre las semanas -->
                                 <t t-set="weeks" t-value="doc.get_weeks()"/>
                                 <t t-foreach="weeks" t-as="week">
                                     <tr>
@@ -100,13 +119,13 @@
         </t>
     </template>
 
-    <!-- Acción de informe (sin cambios) -->
+    <!-- Acción de informe -->
     <record id="action_report_individual_plan" model="ir.actions.report">
         <field name="name">Plan Individual</field>
         <field name="model">calendar_workplan.plan</field>
         <field name="report_type">qweb-pdf</field>
         <field name="report_name">calendar_workplan.report_individual_plan</field>
-        <field name="report_file">calendar_workplan.report_individual_plan</field>
+        <field name="paperformat_id" ref="paperformat_landscape_custom"/> <!-- Formato asignado -->
         <field name="binding_model_id" ref="model_calendar_workplan_plan"/>
         <field name="binding_type">report</field>
     </record>
