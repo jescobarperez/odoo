@@ -135,7 +135,22 @@ class CalendarWorkplanPlan(models.Model):
         required=True
     )
 
-
+    is_my_plan = fields.Boolean(
+        string="Is My Plan",
+        compute="_compute_is_my_plan",
+        search="_search_is_my_plan",
+    )
+    
+    def _compute_is_my_plan(self):
+        my_partner_id = self.env.user.partner_id.id
+        for record in self:
+            record.is_my_plan = record.presented_by_partner_id.id == my_partner_id
+    
+    def _search_is_my_plan(self, operator, value):
+        my_partner_id = self.env.user.partner_id.id
+        return [('presented_by_partner_id', '=', my_partner_id)]
+        
+        
     _sql_constraints = [
         ('check_valid_tz', 
          "CHECK (plan_tz IN %s)" % str(tuple(pytz.all_timezones)),  # Lista de todas las zonas válidas
@@ -227,7 +242,7 @@ class CalendarWorkplanPlan(models.Model):
         plans = env['calendar_workplan.plan'].search([])
         for plan in plans:
             if not plan.plan_tz or isinstance(plan.plan_tz, bool):
-                plan.plan_tz = plan.env.user.tz or 'UTC'
+                plan.plan_tz = plan.env.user.tz or 'America/Havana'
 
 
 
@@ -341,7 +356,7 @@ class CalendarWorkplanPlan(models.Model):
             'name': f'Annual Work Plan - {year}',
             'presented_by_partner_id': presented_by,
             'approved_by_partner_id': approved_by,
-            'plan_tz': self.env.user.tz or 'UTC'
+            'plan_tz': self.env.user.tz or 'America/Havana'
         })
         
         return annual_plan
@@ -437,7 +452,7 @@ class CalendarWorkplanPlan(models.Model):
                 'plan_month': monthly_plan.plan_month,
                 'date_start': monthly_plan.date_start,
                 'date_end': monthly_plan.date_end,
-                'plan_tz':  employee.user_id.tz or  'UTC',
+                'plan_tz':  employee.user_id.tz or  'America/Havana',
                 'state': 'draft',
                 'presented_by_partner_id': presented_by,
                 'approved_by_partner_id': approved_by,
@@ -474,7 +489,7 @@ class CalendarWorkplanPlan(models.Model):
                 _logger.info("Zona horaria válida: %s", user_tz)
             except Exception as e:
                 _logger.error("¡ERROR DE ZONA HORARIA! %s. Usando UTC como fallback.", str(e))
-                user_tz = timezone('UTC')
+                user_tz = timezone('America/Havana')
     
             # 3. Crear datetime naive local
             naive_date = datetime.combine(value, time.min if min else time.max)
@@ -582,9 +597,12 @@ class CalendarWorkplanPlan(models.Model):
             'allday': event.allday,
             'priority': event.priority,
         } for event in events]
+        
+        # Ordenar la lista de eventos por fecha y hora de inicio
+        event_list = sorted(event_list, key=lambda e: e['start'])
 
         return event_list
-
+        
 
     def get_approved_absences(self):
         """

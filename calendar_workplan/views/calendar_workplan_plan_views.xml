@@ -151,6 +151,7 @@
                                         domain="[('scope','=', 'monthly')]" />
                                 <filter string="Annual" name="filter_annual"
                                         domain="[('scope','=','annual')]" />
+                                <filter string="My Plans" name="filter_my_plans" domain="[('is_my_plan', '=', True)]"/>   
                                 <separator />
                                 <filter name="filter_date_start" string="Since" date="date_start"
                                         default_period="this_year" />
@@ -173,7 +174,8 @@
                 <field name="res_model">calendar_workplan.plan</field>
                 <field name="view_mode">tree,form</field>
                 <field name="context">{'active_test': False, 'search_default_filter_active': 1,
-                        'search_default_filter_date_start': 1}</field>
+                        'search_default_filter_date_start': 1,,
+                        'search_default_filter_my_plans': 1}</field>
         </record>
 
        <record id="mail_template_plan_approval_request" model="mail.template">
