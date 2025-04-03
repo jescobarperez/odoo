@@ -152,6 +152,7 @@
                                 <filter string="Annual" name="filter_annual"
                                         domain="[('scope','=','annual')]" />
                                 <filter string="My Plans" name="filter_my_plans" domain="[('is_my_plan', '=', True)]"/>   
+                                <filter string="Requires my approval" name="filter_my_approval" domain="[('requires_my_approval', '=', True)]"/>  
                                 <separator />
                                 <filter name="filter_date_start" string="Since" date="date_start"
                                         default_period="this_year" />

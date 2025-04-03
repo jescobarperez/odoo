@@ -140,6 +140,11 @@ class CalendarWorkplanPlan(models.Model):
         compute="_compute_is_my_plan",
         search="_search_is_my_plan",
     )
+    requires_my_approval = fields.Boolean(
+        string="My approval required",
+        compute="_compute_requires_my_approval",
+        search="_search_requires_my_approval",
+    )
     
     def _compute_is_my_plan(self):
         my_partner_id = self.env.user.partner_id.id
@@ -149,7 +154,16 @@ class CalendarWorkplanPlan(models.Model):
     def _search_is_my_plan(self, operator, value):
         my_partner_id = self.env.user.partner_id.id
         return [('presented_by_partner_id', '=', my_partner_id)]
-        
+
+    
+    def _compute_requires_my_approval(self):
+        my_partner_id = self.env.user.partner_id.id
+        for record in self:
+            record.requires_my_approval = record.approved_by_partner_id.id == my_partner_id
+    
+    def _search_requires_my_approval(self, operator, value):
+        my_partner_id = self.env.user.partner_id.id
+        return [('approved_by_partner_id', '=', my_partner_id)]        
         
     _sql_constraints = [
         ('check_valid_tz', 
