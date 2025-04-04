@@ -25,9 +25,7 @@
                                         type="action"
                                         name="%(calendar_workplan.action_report_annual_plan)d"
                                         class="btn-primary"
-                                        attrs="{'invisible': [('scope', '!=', 'annual')]}"/>       
-
-                    
+                                        attrs="{'invisible': [('scope', '!=', 'annual')]}"/>                      
                
             
                                 </header>
@@ -37,11 +35,14 @@
                                         </group>
                                         <div class="oe_button_box" name="button_box">
                                                 <button class="oe_stat_button" name="child_ids_view"
-                                                        type="object" icon="fa-sitemap">
-                                                        <field string="Child plans"
-                                                                name="child_ids"
-                                                                widget="statinfo" />
+                                                        type="object" icon="fa-sitemap"
+                                                        attrs="{'invisible': [('scope', '=', 'individual')]}">
+                                                    <field string="Child plans"
+                                                            name="child_ids"
+                                                            widget="statinfo" />
                                                 </button>
+
+
                                                 <button class="oe_stat_button"
                                                         name="meeting_ids_view"
                                                         type="object" icon="fa-sitemap">
@@ -70,32 +71,34 @@
                                                                 attrs="{'invisible': [('scope', '!=', 'monthly')]}" />
                                                 </group>
                                                 <group>
-                                                        <field name="presented_by_partner_id" />
+                                                        <field name="presented_by_partner_id" 
+                                                               attrs="{'readonly': [('scope', '=', 'individual')]}"/>
                                                         <field name="approved_by_partner_id" />
                                                         <field name="company_id"
                                                                 placeholder="Company"
                                                                 options="{'no_create': True}"
                                                                 groups="base.group_multi_company" />
                                                         <field name="plan_tz" force_save="1" />
-
                                                 </group>
                                         </group>
-                                        <group name="work_plan_date_range">
+
+                                            <group name="work_plan_date_range">
                                                 <label for="date_start" string="Work Plan Period" />
                                                 <div class="o_row">
-                                                        <field name="date_start" force_save="1"
-                                                                readonly="1"
-                                                                class="oe_inline" widget="daterange"
-                                                                options="{'related_end_date': 'date_end'}" />
-                                                        <i class="fa fa-long-arrow-right mx-2"
-                                                                aria-label="Arrow icon"
-                                                                title="Arrow" />
-                                                        <field name="date_end" force_save="1"
-                                                                readonly="1"
-                                                                class="oe_inline" widget="daterange"
-                                                                options="{'related_start_date': 'date_start'}" />
+                                                    <field name="date_start" force_save="1"
+                                                            attrs="{'readonly': [('scope', '=', 'individual'), ('parent_id', '!=', False)]}"
+                                                            class="oe_inline" widget="daterange"
+                                                            options="{'related_end_date': 'date_end'}" />
+                                                    <i class="fa fa-long-arrow-right mx-2"
+                                                            aria-label="Arrow icon"
+                                                            title="Arrow" />
+                                                    <field name="date_end" force_save="1"
+                                                            attrs="{'readonly': [('scope', '=', 'individual'), ('parent_id', '!=', False)]}"
+                                                            class="oe_inline" widget="daterange"
+                                                            options="{'related_start_date': 'date_start'}" />
                                                 </div>
-                                        </group>
+                                            </group>
+
                                         <notebook>
                                                 <page name="goals" string="Goals"
                                                         attrs="{'invisible': [('scope', '!=', 'annual')]}">

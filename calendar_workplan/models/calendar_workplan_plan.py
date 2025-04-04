@@ -24,6 +24,26 @@ class CalendarWorkplanPlan(models.Model):
     _order = 'plan_sequence'
 
     @api.model
+    def default_get(self, fields_list):
+        res = super().default_get(fields_list)
+        
+        # Establecer presented_by_partner_id para planes individuales
+        if self._context.get('default_scope') == 'individual':
+            res['presented_by_partner_id'] = self.env.user.partner_id.id
+        
+        # Si hay un padre definido y es plan individual
+        parent_id = self._context.get('default_parent_id') or res.get('parent_id')
+        if parent_id and self._context.get('default_scope') == 'individual':
+            parent_plan = self.env['calendar_workplan.plan'].browse(parent_id)
+            if parent_plan.exists():
+                res['date_start'] = parent_plan.date_start
+                res['date_end'] = parent_plan.date_end
+                res['plan_month'] = parent_plan.plan_month
+                res['plan_year'] = parent_plan.plan_year
+        
+        return res
+
+    @api.model
     def _get_years(self):
         current_year = fields.Datetime.today().year
         return [('%04d' % year_number, '%02d' % year_number) for year_number in range(current_year, current_year+3)]
@@ -277,6 +297,12 @@ class CalendarWorkplanPlan(models.Model):
     def onchange_parent_id(self):
         if self.parent_id:
             self.plan_year = self.parent_id.plan_year
+        # Solo para planes individuales
+            if self.scope == 'individual':
+                self.date_start = self.parent_id.date_start
+                self.date_end = self.parent_id.date_end
+
+
     
     @api.onchange('scope', 'plan_year', 'plan_month')
     def onchange_period_related_fields(self):
@@ -337,10 +363,26 @@ class CalendarWorkplanPlan(models.Model):
 
     @api.model_create_multi
     def create(self, vals_list):
+        # Primera parte: heredar fechas para planes individuales
+        for vals in vals_list:
+            if vals.get('parent_id') and vals.get('scope') == 'individual':
+                parent = self.browse(vals['parent_id'])
+                vals.setdefault('date_start', parent.date_start)
+                vals.setdefault('date_end', parent.date_end)
+        
+        # Crear los registros
         plans = super().create(vals_list)
+        
+        # Segunda parte: asociar secciones para planes anuales
         sections = self.env['calendar_workplan.section'].search([])
         for section in sections:
-            section.update({'workplan_ids': [Command.link(plan.id) for plan in plans.filtered(lambda it: it.scope == 'annual')]})
+            section.update({
+                'workplan_ids': [
+                    Command.link(plan.id) 
+                    for plan in plans.filtered(lambda it: it.scope == 'annual')
+                ]
+            })
+        
         return plans
         
     @api.model
