@@ -54,14 +54,15 @@
                                         <widget name="web_ribbon" title="Archived"
                                                 bg_color="bg-danger"
                                                 attrs="{'invisible': [('active', '=', True)]}" />
-                                        <div class="oe_title">
-                                                <h1 class="d-flex flex-row">
-                                                        <field name="name" placeholder="Plan's Name"
-                                                                style="font-size: min(4vw, 2.6rem);"
-                                                                force_save="1" />
-                                                </h1>
-                                        </div>
-                                        <group name="generals">
+                                                <div class="oe_title">
+                                                                <h1 class="d-flex flex-row">
+                                                                    <field name="name" placeholder="Plan's Name"
+                                                                            attrs="{'readonly': [('date_start', '!=', False)]}"
+                                                                            style="font-size: min(4vw, 2.6rem);"
+                                                                            force_save="1" />
+                                                                </h1>
+                                                </div>    
+                                                <group name="generals">
                                                 <group>
                                                         <field name="scope" readonly="1" />
                                                         <field name="plan_year" force_save="1"

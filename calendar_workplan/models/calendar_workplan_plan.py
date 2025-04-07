@@ -98,8 +98,10 @@ class CalendarWorkplanPlan(models.Model):
         return self.env.ref('base.partner_admin').id
 
        
-    name = fields.Char("Plan Name", required=True, compute='_compute_name',
-                       store=True, translate=True)
+    name = fields.Char(string="Plan name", required=True)  # Almacenado
+    display_name = fields.Char(string="Nombre completo", compute="_compute_display_name", store=True)
+
+   
     date_start = fields.Date("Start Date", required=True, tracking=True)
     date_end = fields.Date("End Date", required=True, tracking=True)
     utc_start = fields.Datetime(compute="_compute_utc_period_limits", store=True)
@@ -190,35 +192,18 @@ class CalendarWorkplanPlan(models.Model):
          "CHECK (plan_tz IN %s)" % str(tuple(pytz.all_timezones)),  # Lista de todas las zonas válidas
          "La zona horaria seleccionada no es válida")
 ]
+    @api.depends("name", "parent_id", "scope", "plan_month", "plan_year")
+    def _compute_display_name(self):
+        for plan in self:
+            if plan.scope == "individual" and plan.parent_id:
+                # Ejemplo: "Plan Anual 2024 - Enero - Individual"
+                plan.display_name = f"{plan.parent_id.display_name} - Individual"
+            elif plan.scope == "monthly" and plan.parent_id:
+                # Ejemplo: "Plan Anual 2024 - Enero"
+                plan.display_name = f"{plan.parent_id.name} - {datetime.strptime(str(plan.plan_month), '%m').strftime('%B')}"
+            else:
+                plan.display_name = plan.name
     
-    @api.depends('plan_month', 'plan_year', 'company_id')
-    def _compute_name(self):
-        for record in self:
-            plan_year = record.plan_year
-            plan_sequence = plan_name = ''
-            
-            # Handle plan year
-            if plan_year:
-                plan_sequence = plan_name = f"{plan_year}"
-                
-                if record.plan_month:
-                    plan_sequence = f"{plan_sequence}-{record.plan_month}"
-                    plan_name = f"{plan_name}/{record.plan_month}"
-                
-                # Handle individual plans
-                if record.scope == 'individual':
-                    plan_sequence = f"{plan_year}-{record.date_start:02d}-{record.presented_by_partner_id.name}"
-                    plan_name = f"{plan_name}-{record.presented_by_partner_id.name}"
-            
-            # Handle company ID
-            if record.company_id:
-                plan_sequence = f"{plan_sequence}-{record.company_id.id}"
-                plan_name = f"{plan_name}-{record.company_id.name}"
-            
-            # Set computed values
-            record.plan_sequence = plan_sequence
-            record.name = plan_name
-   
 
     def _is_event_in_plan_date_range(self, event, plan_tz):
         """ Verifica si el evento está dentro del rango de fechas del plan, considerando la zona horaria. """
@@ -363,17 +348,41 @@ class CalendarWorkplanPlan(models.Model):
 
     @api.model_create_multi
     def create(self, vals_list):
-        # Primera parte: heredar fechas para planes individuales
         for vals in vals_list:
-            if vals.get('parent_id') and vals.get('scope') == 'individual':
+            parent = None
+
+            # Heredar datos desde el padre si existe
+            if vals.get('parent_id'):
                 parent = self.browse(vals['parent_id'])
-                vals.setdefault('date_start', parent.date_start)
-                vals.setdefault('date_end', parent.date_end)
-        
-        # Crear los registros
+
+                if parent.scope == 'monthly':
+                    vals.update({
+                        'plan_month': parent.plan_month,
+                        'plan_year': parent.plan_year,
+                        'date_start': parent.date_start,
+                        'date_end': parent.date_end
+                    })
+                elif vals.get('scope') == 'individual':
+                    vals.setdefault('date_start', parent.date_start)
+                    vals.setdefault('date_end', parent.date_end)
+
+            # Generar nombre si no está definido
+            if 'name' not in vals and vals.get('date_start'):
+                start_date = fields.Date.from_string(vals['date_start'])
+                user_name = self.env.user.name
+                company_name = self.env.company.name
+
+                if vals.get('scope') == 'monthly':
+                    month_name = start_date.strftime('%m')
+                    vals['name'] = f"{start_date.year}/{month_name}-{user_name}-{company_name}"
+                elif vals.get('scope') == 'individual' and parent:
+                    day_month = parent.date_start.strftime('%m')
+                    vals['name'] = f"{day_month}-{user_name}-{company_name}"
+
+        # Crear registros
         plans = super().create(vals_list)
-        
-        # Segunda parte: asociar secciones para planes anuales
+
+        # Asociar secciones para planes anuales
         sections = self.env['calendar_workplan.section'].search([])
         for section in sections:
             section.update({
@@ -382,8 +391,22 @@ class CalendarWorkplanPlan(models.Model):
                     for plan in plans.filtered(lambda it: it.scope == 'annual')
                 ]
             })
-        
+
         return plans
+
+    @api.onchange('date_start', 'scope')
+    def _onchange_dates(self):
+        """Actualizar nombre cuando cambian las fechas"""
+        if self.date_start and not self._origin:  # Solo para nuevos registros
+            user_name = self.env.user.name
+            company_name = self.env.company.name
+            
+            if self.scope == 'monthly':
+                month_name = self.date_start.strftime('%m')
+                self.name = f"{self.date_start.year}/{month_name}-{user_name}-{company_name}"
+            elif self.scope == 'individual':
+                day_month = self.date_start.strftime('%d/%m')
+                self.name = f"{day_month}-{user_name}-{company_name}"
         
     @api.model
     def _create_annual_plan(self, year):
