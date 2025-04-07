@@ -98,7 +98,7 @@ class CalendarWorkplanPlan(models.Model):
         return self.env.ref('base.partner_admin').id
 
        
-    name = fields.Char(string="Plan name", required=True)  # Almacenado
+    name = fields.Char(string="Plan name", compute="_compute_name")  # Almacenado
     display_name = fields.Char(string="Nombre completo", compute="_compute_display_name", store=True)
 
    
@@ -192,18 +192,38 @@ class CalendarWorkplanPlan(models.Model):
          "CHECK (plan_tz IN %s)" % str(tuple(pytz.all_timezones)),  # Lista de todas las zonas válidas
          "La zona horaria seleccionada no es válida")
 ]
-    @api.depends("name", "parent_id", "scope", "plan_month", "plan_year")
+    @api.depends("scope", "plan_year", "plan_month", "company_id", "presented_by_partner_id")
+    def _compute_name(self):
+        for plan in self:
+            if plan.scope == "annual":
+                # Formato: aaaa-NombreCompañia
+                plan.name = f"{plan.plan_year}-{plan.company_id.name}"
+            elif plan.scope == "monthly":
+                # Formato: aaaa/mm-NombreCompañia
+                plan.name = f"{plan.plan_year}/{plan.plan_month}-{plan.company_id.name}"
+            elif plan.scope == "individual":
+                # Formato: aaaa/mm-NombreCompañia-Usuario
+                plan.name = (
+                    f"{plan.plan_year}/{plan.plan_month}-"
+                    f"{plan.presented_by_partner_id.name}"
+                )
+            else:
+                # Fallback por si hay nuevos alcances no contemplados
+                plan.name = plan_year
+ 
+    @api.depends("scope", "plan_year", "plan_month", "company_id", "presented_by_partner_id")
     def _compute_display_name(self):
         for plan in self:
-            if plan.scope == "individual" and plan.parent_id:
-                # Ejemplo: "Plan Anual 2024 - Enero - Individual"
-                plan.display_name = f"{plan.parent_id.display_name} - Individual"
-            elif plan.scope == "monthly" and plan.parent_id:
-                # Ejemplo: "Plan Anual 2024 - Enero"
-                plan.display_name = f"{plan.parent_id.name} - {datetime.strptime(str(plan.plan_month), '%m').strftime('%B')}"
+            if plan.scope == "annual":
+                plan.display_name = f"PA-{plan.name}"
+            elif plan.scope == "monthly":
+               plan.display_name = f"PM-{plan.name}"
+            elif plan.scope == "individual":
+               plan.display_name = f"PI-{plan.name}"
             else:
+                # Fallback por si hay nuevos alcances no contemplados
                 plan.display_name = plan.name
-    
+   
 
     def _is_event_in_plan_date_range(self, event, plan_tz):
         """ Verifica si el evento está dentro del rango de fechas del plan, considerando la zona horaria. """
@@ -366,19 +386,6 @@ class CalendarWorkplanPlan(models.Model):
                     vals.setdefault('date_start', parent.date_start)
                     vals.setdefault('date_end', parent.date_end)
 
-            # Generar nombre si no está definido
-            if 'name' not in vals and vals.get('date_start'):
-                start_date = fields.Date.from_string(vals['date_start'])
-                user_name = self.env.user.name
-                company_name = self.env.company.name
-
-                if vals.get('scope') == 'monthly':
-                    month_name = start_date.strftime('%m')
-                    vals['name'] = f"{start_date.year}/{month_name}-{user_name}-{company_name}"
-                elif vals.get('scope') == 'individual' and parent:
-                    day_month = parent.date_start.strftime('%m')
-                    vals['name'] = f"{day_month}-{user_name}-{company_name}"
-
         # Crear registros
         plans = super().create(vals_list)
 
@@ -393,20 +400,6 @@ class CalendarWorkplanPlan(models.Model):
             })
 
         return plans
-
-    @api.onchange('date_start', 'scope')
-    def _onchange_dates(self):
-        """Actualizar nombre cuando cambian las fechas"""
-        if self.date_start and not self._origin:  # Solo para nuevos registros
-            user_name = self.env.user.name
-            company_name = self.env.company.name
-            
-            if self.scope == 'monthly':
-                month_name = self.date_start.strftime('%m')
-                self.name = f"{self.date_start.year}/{month_name}-{user_name}-{company_name}"
-            elif self.scope == 'individual':
-                day_month = self.date_start.strftime('%d/%m')
-                self.name = f"{day_month}-{user_name}-{company_name}"
         
     @api.model
     def _create_annual_plan(self, year):

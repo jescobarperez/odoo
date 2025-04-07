@@ -56,7 +56,7 @@
                                                 attrs="{'invisible': [('active', '=', True)]}" />
                                                 <div class="oe_title">
                                                                 <h1 class="d-flex flex-row">
-                                                                    <field name="name" placeholder="Plan's Name"
+                                                                    <field name="display_name" placeholder="Plan's Name"
                                                                             attrs="{'readonly': [('date_start', '!=', False)]}"
                                                                             style="font-size: min(4vw, 2.6rem);"
                                                                             force_save="1" />
