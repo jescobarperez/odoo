@@ -192,6 +192,19 @@ class CalendarWorkplanPlan(models.Model):
          "CHECK (plan_tz IN %s)" % str(tuple(pytz.all_timezones)),  # Lista de todas las zonas válidas
          "La zona horaria seleccionada no es válida")
 ]
+
+    @api.constrains('name', 'parent_id')
+    def _check_unique_name(self):
+        for plan in self:
+            # Buscar planes con el mismo nombre y mismo padre
+            existing_plans = self.search([
+                ('name', '=', plan.name),
+                ('parent_id', '=', plan.parent_id.id),
+                ('id', '!=', plan.id)
+            ])
+            if existing_plans:
+                raise ValidationError("⚠️ Ya existe un plan con el mismo nombre bajo este padre.")
+
     @api.depends("scope", "plan_year", "plan_month", "company_id", "presented_by_partner_id")
     def _compute_name(self):
         for plan in self:
@@ -295,7 +308,7 @@ class CalendarWorkplanPlan(models.Model):
     def onchange_periodicity(self):
         if self.scope == 'annual':
             self.plan_month = None
-        else:
+        elif self.scope == 'monthly':
             self.plan_month = '%02d' % fields.Datetime.today().month
 
     @api.onchange('parent_id')
@@ -374,18 +387,18 @@ class CalendarWorkplanPlan(models.Model):
             # Heredar datos desde el padre si existe
             if vals.get('parent_id'):
                 parent = self.browse(vals['parent_id'])
-
+                today = fields.Date.today()
                 if parent.scope == 'monthly':
                     vals.update({
-                        'plan_month': parent.plan_month,
-                        'plan_year': parent.plan_year,
-                        'date_start': parent.date_start,
-                        'date_end': parent.date_end
+                        'plan_year': parent.plan_year,                        
                     })
                 elif vals.get('scope') == 'individual':
+                    vals.setdefault('plan_year', parent.plan_year)
+                    vals.setdefault('plan_month', parent.plan_month)
                     vals.setdefault('date_start', parent.date_start)
                     vals.setdefault('date_end', parent.date_end)
-
+                    vals.update({
+                        'plan_month': parent.plan_month, }) 
         # Crear registros
         plans = super().create(vals_list)
 

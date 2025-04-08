@@ -127,7 +127,7 @@
                 <field name="model">calendar_workplan.plan</field>
                 <field name="arch" type="xml">
                         <tree string="Plans" sample="1" decoration-muted="(not active)">
-                                <field name="name" />
+                                <field name="display_name" />
                                 <field name="active" invisible="1" />
                                 <field name="date_start" />
                                 <field name="date_end" />
