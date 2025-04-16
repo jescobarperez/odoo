@@ -20,7 +20,7 @@ class LocalAIModel(models.Model):
                 _logger.error("No base URL provided for LM Studio")
                 return False
 
-            response = requests.get(f"{base_url.rstrip('/')}/v1/models", timeout=10)
+            response = requests.get(f"{base_url.rstrip('/')}/models", timeout=10)
             if response.status_code == 200:
                 models_data = response.json()
                 current_models = {m.model_id: m for m in self.search([])}
