@@ -85,9 +85,9 @@ class Channel(models.Model):
     def _get_localai_response(self, prompt):
         ICP = self.env['ir.config_parameter'].sudo()
         api_key = ICP.get_param('asi_ia.openapi_api_key')
-        base_url= ICP.get_param('asi_ia.openapi_base_url')
-        _logger.warning('***->url del endpoint: %s' % base_url)      
-        client = OpenAI(base_url="http://192.168.1.3:1234/v1", api_key="noapykey")
+        url= ICP.get_param('asi_ia.openapi_base_url')
+        _logger.warning('***->url del endpoint: %s' % url)      
+        client = OpenAI(base_url=url, api_key="noapykey")
         localai_model_id = ICP.get_param('asi_ia.localai_model')
         
         try:
@@ -98,7 +98,6 @@ class Channel(models.Model):
             localai_model = 'qwen2-0.5b-instruct'
             pass
         try:
-            localai_model = 'qwen2-0.5b-instruct'
             _logger.warning('***->LLMStudio  propmt data: %s' % prompt)        
             response = client.chat.completions.create(
                 messages=[{"role": "system", "content": prompt}],
