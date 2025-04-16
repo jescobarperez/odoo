@@ -830,7 +830,51 @@ class CalendarWorkplanPlan(models.Model):
         }
         
         
-       
     def action_print_report(self):
         # Llamar al reporte directamente
         return self.env.ref('calendar_workplan.action_report_workplan').report_action(self)
+        
+    def action_post_plan(self):
+        for plan in self:
+            #  Verificar si el usuario es presentador o administrador
+            is_presenter = plan.presented_by_partner_id == self.env.user.partner_id
+            is_admin = self.env.user.has_group("calendar_workplan.calendar_workplan_group_manager")  # Grupo de administradores
+            
+            if not (is_presenter or is_admin):
+                raise UserError("Solo el presentador o un administrador pueden publicar este plan.")
+            
+            if plan.state != 'draft':
+                raise UserError("El plan debe estar en estado 'Borrador' para ser publicado.")
+            
+            plan.write({'state': 'posted'})
+        return True
+        
+    
+    def action_approve_plan(self):
+        # Validar todos los registros seleccionados
+        if any(plan.approved_by_partner_id != self.env.user.partner_id for plan in self):
+            raise UserError("Solo el usuario aprobador puede aprobar estos planes.")
+        if any(plan.state != 'posted' for plan in self):
+            raise UserError("Todos los planes deben estar en estado 'Solicitado' para ser aprobados.")
+        
+        # Aplicar cambios masivamente
+        self.write({'state': 'approved'})
+        return True
+    
+    def action_decline_plan(self):
+        if any(plan.approved_by_partner_id != self.env.user.partner_id for plan in self):
+            raise UserError("Solo el usuario aprobador puede desaprobar estos planes.")
+        if any(plan.state != 'posted' for plan in self):
+            raise UserError("Todos los planes deben estar en estado 'Solicitado' para ser desaprobados.")
+        
+        self.write({'state': 'draft'})
+        return True
+    
+    def action_close_plan(self):
+        if any(plan.approved_by_partner_id != self.env.user.partner_id for plan in self):
+            raise UserError("Solo el usuario aprobador puede cerrar estos planes.")
+        if any(plan.state != 'posted' for plan in self):
+            raise UserError("Todos los planes deben estar en estado 'Solicitado' para ser cerrados.")
+        
+        self.write({'state': 'closed'})
+        return True 

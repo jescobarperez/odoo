@@ -26,13 +26,35 @@
                                         name="%(calendar_workplan.action_report_annual_plan)d"
                                         class="btn-primary"
                                         attrs="{'invisible': [('scope', '!=', 'annual')]}"/>                      
-               
-            
+                              
+                                                            <button 
+                                    string="Solicitar aprobación" 
+                                    type="object" 
+                                    name="action_post_plan" 
+                                    class="btn-primary"
+                                    attrs="{'invisible': [('state', '!=', 'draft')]}"/>   
+                                   /> 
+                              <button 
+                                    string="Aprobar Plan" 
+                                    type="object" 
+                                    name="action_approve_plan" 
+                                    class="btn-success"
+                                    attrs="{'invisible': [('state', '!=', 'posted')]}"/>   
+                                   />                             
+                                                             
+                                <button 
+                                    string="Rechazar Plan" 
+                                    type="object" 
+                                    name="action_decline_plan" 
+                                    class="btn-danger"
+                                    attrs="{'invisible': [('state', '!=', 'posted')]}"/>   
+                                   />                             
                                 </header>
+                                
                                 <sheet>
-                                        <group>
+                                        <div>
                                             <field name="state" widget="statusbar"/>
-                                        </group>
+                                        </div>
                                         <div class="oe_button_box" name="button_box">
                                                 <button class="oe_stat_button" name="child_ids_view"
                                                         type="object" icon="fa-sitemap"
@@ -173,7 +195,7 @@
                 </field>
         </record>
 
-        <!-- actions opening views on models -->
+        <!-- actions opening views on models  -->
         <record id="calendar_workplan_plan_action" model="ir.actions.act_window">
                 <field name="name">Plans</field>
                 <field name="res_model">calendar_workplan.plan</field>
@@ -181,7 +203,17 @@
                 <field name="context">{'search_default_filter_date_start': 1,
                         'search_default_filter_my_plans': 1}</field>
         </record>
-
+        
+        <record id="action_approve_multiple_plans" model="ir.actions.server">
+            <field name="name">Aprobar Planes Seleccionados</field>
+            <field name="model_id" ref="model_calendar_workplan_plan"/>
+            <field name="binding_model_id" ref="model_calendar_workplan_plan"/>
+            <field name="code">
+                if records:
+                    records.action_approve_plan()
+            </field>
+            
+</record>
        <record id="mail_template_plan_approval_request" model="mail.template">
             <field name="name">Workplan Approval Request</field>
             <field name="model_id" ref="model_calendar_workplan_plan"/>
