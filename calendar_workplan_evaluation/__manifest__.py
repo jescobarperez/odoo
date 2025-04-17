@@ -6,6 +6,7 @@
     'summary': 'Evaluación del cumplimiento de los planes de trabajo con IA local',
     'depends': ['calendar_workplan', 'asi_ia'],
     'data': [
+        'views/calendar_workplan_plan_view_inherit_eval.xml',
         'security/ir.model.access.csv',
         'views/evaluation_view.xml',
         'report/evaluation_report_template.xml',

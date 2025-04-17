@@ -1,0 +1,96 @@
+ 
+ 
+==== Archivo: C:\Users\javier\Documents\GitHub\odoo\calendar_workplan_evaluation\report\evaluation_report_action.xml ==== 
+ 
+<odoo>
+<record id="action_report_calendar_workplan_evaluation" model="ir.actions.report">
+    <field name="name">Evaluación del Plan de Trabajo</field>
+    <field name="model">calendar_workplan.evaluation</field>
+    <field name="report_type">qweb-pdf</field>
+    <field name="report_name">calendar_workplan_evaluation.report_calendar_workplan_evaluation</field>
+    <field name="report_file">calendar_workplan_evaluation.report_calendar_workplan_evaluation</field>
+</record>
+</odoo>
+ 
+ 
+==== Archivo: C:\Users\javier\Documents\GitHub\odoo\calendar_workplan_evaluation\report\evaluation_report_template.xml ==== 
+ 
+<odoo>
+<template id="report_calendar_workplan_evaluation">
+    <t t-call="web.html_container">
+        <t t-foreach="docs" t-as="doc">
+            <t t-call="web.external_layout">
+                <div class="page">
+                    <h2>Evaluación del Plan de Trabajo: <span t-field="doc.plan_id.name"/></h2>
+                    <p><strong>Fecha de evaluación:</strong> <span t-field="doc.evaluation_date"/></p>
+                    <p><strong>Porcentaje de cumplimiento:</strong> <span t-field="doc.compliance_percentage"/>%</p>
+                    <p><strong>Puntuación general:</strong> <span t-field="doc.quantitative_score"/> / 10</p>
+                    <h4>Análisis cualitativo:</h4>
+                    <pre t-esc="doc.qualitative_analysis"/>
+                </div>
+            </t>
+        </t>
+    </t>
+</template>
+</odoo>
+ 
+ 
+==== Archivo: C:\Users\javier\Documents\GitHub\odoo\calendar_workplan_evaluation\security\ir.model.access.csv ==== 
+ 
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_calendar_workplan_evaluation,calendar_workplan.evaluation,model_calendar_workplan_evaluation,base.group_user,1,0,0,0
+ 
+ 
+==== Archivo: C:\Users\javier\Documents\GitHub\odoo\calendar_workplan_evaluation\static\src\css\styles.css ==== 
+ 
+.page {
+    font-size: 12pt;
+} 
+ 
+==== Archivo: C:\Users\javier\Documents\GitHub\odoo\calendar_workplan_evaluation\views\calendar_workplan_plan_view_inherit_eval.xml ==== 
+ 
+<odoo>
+<record id="view_calendar_workplan_plan_form_inherit_eval" model="ir.ui.view">
+    <field name="name">calendar.workplan.plan.form.inherit.eval</field>
+    <field name="model">calendar_workplan.plan</field>
+    <field name="inherit_id" ref="calendar_workplan.calendar_workplan_plan_view_form"/>
+    <field name="arch" type="xml">
+        <xpath expr="//header" position="inside">
+            <button name="action_generate_evaluation"
+                    string="Generar Evaluación IA"
+                    type="object"
+                    class="btn-secondary"
+                    attrs="{'invisible': [('scope', '!=', 'individual')]}"/>
+        </xpath>
+    </field>
+</record>
+</odoo>
+ 
+ 
+==== Archivo: C:\Users\javier\Documents\GitHub\odoo\calendar_workplan_evaluation\views\evaluation_view.xml ==== 
+ 
+<odoo>
+<record id="view_calendar_workplan_evaluation_form" model="ir.ui.view">
+    <field name="name">calendar.workplan.evaluation.form</field>
+    <field name="model">calendar_workplan.evaluation</field>
+    <field name="arch" type="xml">
+        <form string="Evaluación IA">
+            <header>
+                <button name="%(calendar_workplan_evaluation.action_report_calendar_workplan_evaluation)d"
+                        string="Imprimir Evaluación"
+                        type="action"
+                        class="btn-primary"
+                        context="{'active_ids': [active_id]}"/>
+            </header>
+            <group>
+                <field name="plan_id" readonly="1"/>
+                <field name="evaluation_date" readonly="1"/>
+                <field name="compliance_percentage" readonly="1"/>
+                <field name="quantitative_score" readonly="1"/>
+                <field name="qualitative_analysis" readonly="1"/>
+            </group>
+        </form>
+    </field>
+</record>
+</odoo>
+ 
