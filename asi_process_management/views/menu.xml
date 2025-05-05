@@ -1,0 +1,5 @@
+<odoo>
+  <menuitem id="menu_process_root" name="Gestión de Procesos" sequence="10"/>
+  <menuitem id="menu_process_config" name="Procesos" parent="menu_process_root" sequence="1" action="action_process"/>
+  <menuitem id="menu_activity_config" name="Actividades" parent="menu_process_root" sequence="2" action="action_activity"/>
+</odoo>

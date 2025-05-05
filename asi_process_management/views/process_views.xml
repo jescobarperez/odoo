@@ -1,0 +1,51 @@
+<odoo>
+    <record id="view_x_process_form" model="ir.ui.view">
+        <field name="name">x.process.form</field>
+        <field name="model">x.process</field>
+        <field name="arch" type="xml">
+            <form string="Proceso Interno">
+                <sheet>
+                    <group>
+                        <field name="name"/>
+                        <field name="department_id"/>
+                        <field name="user_id"/>
+                        <field name="objective"/>              
+                    </group>
+                    <notebook>
+                        <page string="Actividades">
+                            <field name="activity_ids">
+                                <tree editable="bottom">
+                                    <field name="sequence"/>
+                                    <field name="name"/>
+                                    <field name="frequency"/>
+                                    <field name="recurrence_type"/>
+                                    <field name="duration"/>
+                                </tree>
+                            </field>
+                        </page>
+                    </notebook>
+                </sheet>
+                <footer>
+                    <button name="action_view_events" type="object" class="oe_highlight" string="Ver Eventos"/>
+                </footer>
+            </form>
+        </field>
+    </record>
+
+    <record id="view_x_process_tree" model="ir.ui.view">
+        <field name="name">x.process.tree</field>
+        <field name="model">x.process</field>
+        <field name="arch" type="xml">
+            <tree>
+                <field name="name"/>
+                <field name="department_id"/>
+                <field name="user_id"/>
+            </tree>
+        </field>
+    </record>
+  <record id="action_process" model="ir.actions.act_window">
+    <field name="name">Procesos</field>
+    <field name="res_model">x.process</field>
+    <field name="view_mode">tree,form</field>
+  </record>
+</odoo>

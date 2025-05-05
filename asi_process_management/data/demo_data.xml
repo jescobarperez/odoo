@@ -1,0 +1,19 @@
+<odoo>
+  <record id="x_process_demo" model="x.process">
+    <field name="name">Gestión de Nómina</field>
+    <field name="department_id" ref="hr.dep_hr"/>
+    <field name="objective_header">Pago oportuno de salarios</field>
+    <field name="objective_detail">
+      <![CDATA[
+        <h3>Objetivo:</h3>
+        <p>Asegurar el pago correcto de los salarios.</p>
+        <ul>
+          <li>Revisión de asistencias</li>
+          <li>Cálculo de deducciones</li>
+        </ul>
+      ]]>
+    </field>
+    <field name="frequency">monthly</field>
+    <field name="recurrence_type">mensual_personalizado</field>
+  </record>
+</odoo>
